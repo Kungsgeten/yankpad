@@ -10,35 +10,35 @@ the yankpad:
 
   ,** Snippet title
 
-  Here's a text snippet I want to insert.
+      Here's a text snippet I want to insert.
 
   ,** List snippet
 
-  And here's another one, with a list.
+      And here's another one, with a list.
 
-  - I like snippets
-  - They are great!
+      - I like snippets
+      - They are great!
 
   ,* Category 2
 
   ,** Explaining categories
 
-  This snippet belongs to another category. Categories are useful if you need
-  several yankpads, for instance if you're a teacher (like me) working with
-  different courses.
+      This snippet belongs to another category. Categories are useful if you need
+      several yankpads, for instance if you're a teacher (like me) working with
+      different courses.
 
   ,** yasnippet magic
 
-  If you have yasnippet installed (not required), the content in each snippet is
-  actually executed by yasnippet! This means that you could run elisp inside your
-  snippets: `(+ 3 4)` and have handy tab stop fields.
+      If you have yasnippet installed (not required), the content in each snippet
+      is actually executed by yasnippet! This means that you could run elisp
+      inside your snippets: `(+ 3 4)` and have handy tab stop fields.
 
-  | Student | Grade |
-  |---------+-------|
-  | $1      | $2    |
+      | Student | Grade |
+      |---------+-------|
+      | $1      | $2    |
 
-  That's pretty handy!
-  $0
+      That's pretty handy!
+      $0
 #+END_SRC
 
 ** Setup
