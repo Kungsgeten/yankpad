@@ -1,6 +1,9 @@
 * yankpad.el
 
-Let's say that you have text snippets that you want to paste, but that [[http://capitaomorte.github.io/yasnippet/][yasnippet]] or [[https://www.emacswiki.org/emacs/SkeletonMode][skeleton]] is a bit too much when you do not need a shortcut/abbrev for your snippet. You like org-mode, so why not write your snippets there? Introducing the yankpad:
+Let's say that you have text snippets that you want to paste, but that [[http://capitaomorte.github.io/yasnippet/][yasnippet]]
+or [[https://www.emacswiki.org/emacs/SkeletonMode][skeleton]] is a bit too much when you do not need a shortcut/abbrev for your
+snippet. You like org-mode, so why not write your snippets there? Introducing
+the yankpad:
 
 #+BEGIN_SRC org
   ,* Category 1
@@ -20,11 +23,15 @@ Let's say that you have text snippets that you want to paste, but that [[http://
 
   ,** Explaining categories
 
-  This snippet belongs to another category. Categories are useful if you need several yankpads, for instance if you're a teacher (like me) working with different courses.
+  This snippet belongs to another category. Categories are useful if you need
+  several yankpads, for instance if you're a teacher (like me) working with
+  different courses.
 
   ,** yasnippet magic
 
-  If you have yasnippet installed (not required), the content in each snippet is actually executed by yasnippet! This means that you could run elisp inside your snippets: `(+ 3 4)` and have handy tab stop fields.
+  If you have yasnippet installed (not required), the content in each snippet is
+  actually executed by yasnippet! This means that you could run elisp inside your
+  snippets: `(+ 3 4)` and have handy tab stop fields.
 
   | Student | Grade |
   |---------+-------|
@@ -36,8 +43,13 @@ Let's say that you have text snippets that you want to paste, but that [[http://
 
 ** Setup
 
-Add =yankpad.el= to your load-path and require it. The default location for the yankpad file is =yankpad.org= in your =org-directory=. This can be changed by modifying the =yankpad-file= variable.
+1. Add =yankpad.el= to your load-path and require it.
+2. The default location for the yankpad file is =yankpad.org= in your =org-directory=. This can be changed by modifying the =yankpad-file= variable.
+3. That's it!
 
 ** Usage
 
-Add entries to your =yankpad-file=. Level 1 headings are categories and level 2 headings are snippets. Insert a snippet with =M-x yankpad-insert=. If you want to change category, use =M-x yankpad-set-category=. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.
+1. Add entries to your =yankpad-file=. Level 1 headings are categories and level 2 headings are snippets.
+2. Insert a snippet with =M-x yankpad-insert=.
+3. If you want to change category, use =M-x yankpad-set-category=.
+4. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.
