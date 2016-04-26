@@ -42,7 +42,7 @@
   (let* ((snippets (yankpad--snippets yankpad-category))
          (snippet (completing-read "Snippet: " snippets))
          (text (cadr (assoc snippet snippets))))
-    (if (require 'yasnippet nil nil)
+    (if (require 'yasnippet nil t)
         (if (region-active-p)
             (yas-expand-snippet text (region-beginning) (region-end))
           (yas-expand-snippet text))
