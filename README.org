@@ -1,5 +1,13 @@
 * yankpad.el
 
+#+BEGIN_SRC html
+hejsan, this is a paragraph
+
+and this is another one
+
+and this is a third one
+#+END_SRC
+
 Let's say that you have text snippets that you want to paste, but that [[http://capitaomorte.github.io/yasnippet/][yasnippet]]
 or [[https://www.emacswiki.org/emacs/SkeletonMode][skeleton]] is a bit too much when you do not need a shortcut/abbrev for your
 snippet. You like org-mode, so why not write your snippets there? Introducing
