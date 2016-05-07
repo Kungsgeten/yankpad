@@ -82,6 +82,7 @@ Does not change `yankpad-category'."
 (defun yankpad--file-elements ()
   "Run `org-element-parse-buffer' on the `yankpad-file'."
   (with-temp-buffer
+    (org-mode)
     (insert-file-contents yankpad-file)
     (org-element-parse-buffer)))
 
