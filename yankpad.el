@@ -82,9 +82,10 @@ Does not change `yankpad-category'."
 (defun yankpad--file-elements ()
   "Run `org-element-parse-buffer' on the `yankpad-file'."
   (with-temp-buffer
-    (org-mode)
-    (insert-file-contents yankpad-file)
-    (org-element-parse-buffer)))
+    (delay-mode-hooks
+      (org-mode)
+      (insert-file-contents yankpad-file)
+      (org-element-parse-buffer))))
 
 (defun yankpad--categories ()
   "Get the yankpad categories as a list."
@@ -105,6 +106,16 @@ The car is the snippet name and the cdr is the snippet string."
                      (equal (org-element-property :raw-value parent) category-name))
             (cons (org-element-property :raw-value h)
                   (org-element-map h 'section #'org-element-interpret-data))))))))
+
+(defun yankpad-local-category-to-major-mode ()
+  "Try to change `yankpad-category' to match the buffer's major mode.
+If successful, make `yankpad-category' buffer-local."
+  (let ((category (car (member (symbol-name major-mode)
+                               (yankpad--categories)))))
+    (when category
+      (set (make-local-variable 'yankpad-category) category))))
+
+(add-hook 'after-change-major-mode-hook #'yankpad-local-category-to-major-mode)
 
 (provide 'yankpad)
 ;;; yankpad.el ends here

@@ -1,4 +1,4 @@
-* yankpad.el
+#+TITLE:yankpad.el
 
 Let's say that you have text snippets that you want to paste, but that [[http://capitaomorte.github.io/yasnippet/][yasnippet]]
 or [[https://www.emacswiki.org/emacs/SkeletonMode][skeleton]] is a bit too much when you do not need a shortcut/abbrev for your
@@ -39,17 +39,25 @@ the yankpad:
 
       That's pretty handy!
       $0
+
+  ,* org-mode
+
+  ,** Major-mode categories
+
+  If you have a category with the same name as a major-mode, that category will be
+  activated when switching major-mode. This only affects the local buffer and does
+  not modify the global category.
 #+END_SRC
 
-** Setup
+* Setup
 
 1. Add =yankpad.el= to your load-path and require it.
 2. The default location for the yankpad file is =yankpad.org= in your =org-directory=. This can be changed by modifying the =yankpad-file= variable.
 3. That's it!
 
-** Usage
+* Usage
 
 1. Add entries to your =yankpad-file=. Level 1 headings are categories and level 2 headings are snippets.
 2. Insert a snippet with =M-x yankpad-insert=.
-3. If you want to change category, use =M-x yankpad-set-category=.
+3. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode.
 4. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.
