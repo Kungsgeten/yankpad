@@ -63,7 +63,9 @@
   "Insert an entry from the yankpad.
 Uses `yankpad-category', and prompts for it if it isn't set."
   (interactive)
-  (unless yankpad-category (yankpad-set-category))
+  (unless yankpad-category
+    (or (yankpad-local-category-to-major-mode)
+        (yankpad-set-category)))
   (yankpad-insert-from-category yankpad-category))
 
 (defun yankpad-insert-from-category (category)
