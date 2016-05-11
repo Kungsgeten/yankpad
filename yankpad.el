@@ -42,6 +42,7 @@
 ;;; Code:
 
 (require 'org-element)
+(require 'subr-x)
 
 (defvar yankpad-file (expand-file-name "yankpad.org" org-directory)
   "The path to your yankpad.")
