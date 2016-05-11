@@ -7,7 +7,7 @@
 ;; URL: http://github.com/Kungsgeten/yankpad
 ;; Version: 1.00
 ;; Keywords: abbrev convenience
-;; Package-Requires: ()
+;; Package-Requires: ((emacs "24.4"))
 
 ;;; Commentary:
 
@@ -47,6 +47,10 @@
   "The path to your yankpad.")
 (defvar yankpad-category nil
   "The current yankpad category.  Change with `yankpad-set-category'.")
+(defvar yankpad-category-heading-level 1
+  "The org-mode heading level of categories in the `yankpad-file'.")
+(defvar yankpad-snippet-heading-level 2
+  "The org-mode heading level of snippets in the `yankpad-file'.")
 
 (defun yankpad-set-category ()
   "Change the yankpad category."
@@ -92,7 +96,8 @@ Does not change `yankpad-category'."
   (let ((data (yankpad--file-elements)))
     (org-element-map data 'headline
       (lambda (h)
-        (when (equal (org-element-property :level h) 1)
+        (when (equal (org-element-property :level h)
+                     yankpad-category-heading-level)
           (org-element-property :raw-value h))))))
 
 (defun yankpad--snippets (category-name)
@@ -102,7 +107,8 @@ The car is the snippet name and the cdr is the snippet string."
     (org-element-map data 'headline
       (lambda (h)
         (let ((parent (org-element-property :parent h)))
-          (when (and (equal (org-element-property :level h) 2)
+          (when (and (equal (org-element-property :level h)
+                            yankpad-snippet-heading-level)
                      (equal (org-element-property :raw-value parent) category-name))
             (cons (org-element-property :raw-value h)
                   (org-element-map h 'section #'org-element-interpret-data))))))))
@@ -110,10 +116,9 @@ The car is the snippet name and the cdr is the snippet string."
 (defun yankpad-local-category-to-major-mode ()
   "Try to change `yankpad-category' to match the buffer's major mode.
 If successful, make `yankpad-category' buffer-local."
-  (let ((category (car (member (symbol-name major-mode)
-                               (yankpad--categories)))))
-    (when category
-      (set (make-local-variable 'yankpad-category) category))))
+  (when-let ((category (car (member (symbol-name major-mode)
+                                    (yankpad--categories)))))
+    (set (make-local-variable 'yankpad-category) category)))
 
 (add-hook 'after-change-major-mode-hook #'yankpad-local-category-to-major-mode)
 
