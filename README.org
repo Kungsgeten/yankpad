@@ -29,7 +29,7 @@ the yankpad:
 
   ,** yasnippet magic
 
-      If you have yasnippet installed (not required), the content in each snippet
+      If you have yasnippet installed (not a requirement), the content in each snippet
       is actually executed by yasnippet! This means that you could run elisp
       inside your snippets: `(+ 3 4)` and have handy tab stop fields.
 
@@ -47,6 +47,14 @@ the yankpad:
   If you have a category with the same name as a major-mode, that category will be
   activated when switching major-mode. This only affects the local buffer and does
   not modify the global category.
+
+  ,* my-projectile-project
+
+  ,** Projectile based categories
+
+  If you have projectile installed (not a requirement) you can give a category the
+  same name as one of your projectile projects. That category will be activated
+  when using projectile-find-file on a file in the project.
 #+END_SRC
 
 * Setup
@@ -59,5 +67,5 @@ the yankpad:
 
 1. Add entries to your =yankpad-file=. Level 1 headings are categories and level 2 headings are snippets.
 2. Insert a snippet with =M-x yankpad-insert=.
-3. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode.
+3. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode. In the same manner you can name a category to one of your Projectile project names (if Projectile is installed). If there's a clash between major-mode and Projectile categories, Projectile will take precedence.
 4. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.

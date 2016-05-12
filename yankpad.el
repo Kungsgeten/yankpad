@@ -105,7 +105,7 @@ Does not change `yankpad-category'."
 
 (defun yankpad--snippets (category-name)
   "Get an alist of the snippets in CATEGORY-NAME.
-The car is the snippet name and the cdr is the snippet string."
+The car is the snippet name and the cdr is the snippet string." 
   (let ((data (yankpad--file-elements)))
     (org-element-map data 'headline
       (lambda (h)
@@ -124,6 +124,16 @@ If successful, make `yankpad-category' buffer-local."
     (set (make-local-variable 'yankpad-category) category)))
 
 (add-hook 'after-change-major-mode-hook #'yankpad-local-category-to-major-mode)
+
+(defun yankpad-local-category-to-projectile ()
+  "Try to change `yankpad-category' to match the `projectile-project-name'.
+If successful, make `yankpad-category' buffer-local."
+  (when (require 'projectile nil t)
+    (when-let ((category (car (member (projectile-project-name)
+                                      (yankpad--categories)))))
+      (set (make-local-variable 'yankpad-category) category))))
+
+(add-hook 'projectile-find-file-hook #'yankpad-local-category-to-projectile)
 
 (provide 'yankpad)
 ;;; yankpad.el ends here
