@@ -123,17 +123,19 @@ The car is the snippet name and the cdr is the snippet string."
 (defun yankpad-local-category-to-major-mode ()
   "Try to change `yankpad-category' to match the buffer's major mode.
 If successful, make `yankpad-category' buffer-local."
-  (let ((category (car (member (symbol-name major-mode)
-                               (yankpad--categories)))))
-    (when category
-      (set (make-local-variable 'yankpad-category) category))))
+  (when (file-exists-p yankpad-file)
+    (let ((category (car (member (symbol-name major-mode)
+                                 (yankpad--categories)))))
+      (when category
+        (set (make-local-variable 'yankpad-category) category)))))
 
 (add-hook 'after-change-major-mode-hook #'yankpad-local-category-to-major-mode)
 
 (defun yankpad-local-category-to-projectile ()
   "Try to change `yankpad-category' to match the `projectile-project-name'.
 If successful, make `yankpad-category' buffer-local."
-  (when (require 'projectile nil t)
+  (when (and (require 'projectile nil t)
+             (file-exists-p yankpad-file))
     (let ((category (car (member (projectile-project-name)
                                  (yankpad--categories)))))
       (when category
