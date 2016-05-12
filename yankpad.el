@@ -7,7 +7,7 @@
 ;; URL: http://github.com/Kungsgeten/yankpad
 ;; Version: 1.00
 ;; Keywords: abbrev convenience
-;; Package-Requires: ((emacs "24.4"))
+;; Package-Requires: ()
 
 ;;; Commentary:
 
@@ -21,6 +21,11 @@
 ;; snippets.  This means that you can use the features that yasnippet provides
 ;; (tab stops, elisp, etc).  You can use yankpad without yasnippet, and then the
 ;; snippet will simply be inserted as is.
+;;
+;; If you name a category to a major-mode name, that category will be switched
+;; to when you change major-mode.  If you have projectile installed, you can also
+;; name a categories to the same name as your projecile projects, and they will
+;; be switched to when using `projectile-find-file'.
 ;;
 ;; To insert a snippet from the yankpad, use `yankpad-insert'.  If you need to
 ;; change the category, use `yankpad-set-category'.  Here's an example of what
@@ -42,7 +47,6 @@
 ;;; Code:
 
 (require 'org-element)
-(require 'subr-x)
 
 (defvar yankpad-file (expand-file-name "yankpad.org" org-directory)
   "The path to your yankpad.")
@@ -119,9 +123,10 @@ The car is the snippet name and the cdr is the snippet string."
 (defun yankpad-local-category-to-major-mode ()
   "Try to change `yankpad-category' to match the buffer's major mode.
 If successful, make `yankpad-category' buffer-local."
-  (when-let ((category (car (member (symbol-name major-mode)
-                                    (yankpad--categories)))))
-    (set (make-local-variable 'yankpad-category) category)))
+  (let ((category (car (member (symbol-name major-mode)
+                               (yankpad--categories)))))
+    (when category
+      (set (make-local-variable 'yankpad-category) category))))
 
 (add-hook 'after-change-major-mode-hook #'yankpad-local-category-to-major-mode)
 
@@ -129,9 +134,10 @@ If successful, make `yankpad-category' buffer-local."
   "Try to change `yankpad-category' to match the `projectile-project-name'.
 If successful, make `yankpad-category' buffer-local."
   (when (require 'projectile nil t)
-    (when-let ((category (car (member (projectile-project-name)
-                                      (yankpad--categories)))))
-      (set (make-local-variable 'yankpad-category) category))))
+    (let ((category (car (member (projectile-project-name)
+                                 (yankpad--categories)))))
+      (when category
+        (set (make-local-variable 'yankpad-category) category)))))
 
 (add-hook 'projectile-find-file-hook #'yankpad-local-category-to-projectile)
 
