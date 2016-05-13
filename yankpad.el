@@ -50,10 +50,14 @@
 
 (defvar yankpad-file (expand-file-name "yankpad.org" org-directory)
   "The path to your yankpad.")
+
 (defvar yankpad-category nil
   "The current yankpad category.  Change with `yankpad-set-category'.")
+(put 'yankpad-category 'safe-local-variable #'stringp)
+
 (defvar yankpad-category-heading-level 1
   "The org-mode heading level of categories in the `yankpad-file'.")
+
 (defvar yankpad-snippet-heading-level 2
   "The org-mode heading level of snippets in the `yankpad-file'.")
 
@@ -79,7 +83,8 @@ Does not change `yankpad-category'."
   (let* ((snippets (yankpad--snippets category))
          (snippet (completing-read "Snippet: " snippets))
          (text (cadr (assoc snippet snippets))))
-    (if (require 'yasnippet nil t)
+    (if (and (require 'yasnippet nil t)
+             yas-minor-mode)
         (if (region-active-p)
             (yas-expand-snippet text (region-beginning) (region-end))
           (yas-expand-snippet text))
