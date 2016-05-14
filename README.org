@@ -1,4 +1,4 @@
-#+TITLE:yankpad.el
+#+TITLE:yankpad.el [[http://melpa.org/#/yankpad][file:http://melpa.org/packages/yankpad-badge.svg]]
 
 Let's say that you have text snippets that you want to paste, but that [[http://capitaomorte.github.io/yasnippet/][yasnippet]]
 or [[https://www.emacswiki.org/emacs/SkeletonMode][skeleton]] is a bit too much when you do not need a shortcut/abbrev for your
@@ -59,9 +59,11 @@ the yankpad:
 
 * Setup
 
-1. Add =yankpad.el= to your load-path and require it.
+1. Install =yankpad= from Melpa, or download =yankpad.el= and add it to your load-path and require it.
 2. The default location for the yankpad file is =yankpad.org= in your =org-directory=. This can be changed by modifying the =yankpad-file= variable.
 3. That's it!
+
+If you want different heading levels for the categories (default 1) or snippets (default 2), change the value of =yankpad-category-heading-level= and/or =yankpad-snippet-heading-level=.
 
 * Usage
 
@@ -69,3 +71,9 @@ the yankpad:
 2. Insert a snippet with =M-x yankpad-insert=.
 3. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode. In the same manner you can name a category to one of your Projectile project names (if Projectile is installed). If there's a clash between major-mode and Projectile categories, Projectile will take precedence.
 4. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.
+
+Sometimes it may be useful to set the category automatically for a specific file. In this case you can add =yankpad-category= as a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html][file variable]], for instance by adding this line at the top of your file:
+
+#+BEGIN_SRC
+-*- yankpad-category: "Category name"; -*-
+#+END_SRC
