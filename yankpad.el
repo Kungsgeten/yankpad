@@ -118,10 +118,13 @@ The car is the snippet name and the cdr is the snippet string."
   (let ((data (yankpad--file-elements)))
     (org-element-map data 'headline
       (lambda (h)
-        (let ((parent (org-element-property :parent h)))
+        (let ((lineage (org-element-lineage h)))
           (when (and (equal (org-element-property :level h)
                             yankpad-snippet-heading-level)
-                     (equal (org-element-property :raw-value parent) category-name))
+                     (member category-name
+                             (mapcar (lambda (x)
+                                       (org-element-property :raw-value x))
+                                     lineage)))
             (cons (org-element-property :raw-value h)
                   (org-element-map h 'section #'org-element-interpret-data))))))))
 
