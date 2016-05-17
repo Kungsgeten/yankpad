@@ -12,12 +12,11 @@ the yankpad:
 
       Here's a text snippet I want to insert.
 
-  ,** List snippet
+  ,** Snippet with keybinding                               :last:tag:is:key:o:
 
-      And here's another one, with a list.
-
-      - I like snippets
-      - They are great!
+      And here's another snippet. This snippet has tags, and the last of these
+      tags should be a key. This will bind the snippet to the key (in this case
+      "o") in a prefix map called yankpad-map.
 
   ,* Category 2
 
@@ -61,9 +60,22 @@ the yankpad:
 
 1. Install =yankpad= from Melpa, or download =yankpad.el= and add it to your load-path and require it.
 2. The default location for the yankpad file is =yankpad.org= in your =org-directory=. This can be changed by modifying the =yankpad-file= variable.
-3. That's it!
+3. Optionally bind =yankpad-map= to a key.
+4. That's it!
 
 If you want different heading levels for the categories (default 1) or snippets (default 2), change the value of =yankpad-category-heading-level= and/or =yankpad-snippet-heading-level=.
+
+Here's an example setup using the excellent [[https://github.com/jwiegley/use-package][use-package]]:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package yankpad
+    :ensure t
+    :defer 10
+    :init
+    (setq yankpad-file "~/yankpad.org")
+    :config
+    (bind-key "<f7>" 'yankpad-map))
+#+END_SRC
 
 * Usage
 
@@ -80,4 +92,12 @@ Sometimes it may be useful to set the category automatically for a specific file
 -*- yankpad-category: "Category name"; -*-
 #+END_SRC
 
+The above will not add keybindings to =yankpad-map=. In order to do that on a file-to-file basis, add the following to the top of the file instead:
 
+#+BEGIN_SRC
+-*- eval: (yankpad-set-local-category "Category name") -*-
+#+END_SRC
+
+* Changelog
+
+- 1.10 (May 2016) :: Snippets can have keybindings by tagging them. The last tag will be interpreted as a key and inserted into =yankpad-map=.
