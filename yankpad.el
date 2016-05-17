@@ -30,8 +30,9 @@
 ;; To insert a snippet from the yankpad, use `yankpad-insert'.  If you need to
 ;; change the category, use `yankpad-set-category'.  Here's an example of what
 ;; yankpad.org could look like:
-;;  
-;; * Category 1
+
+;;; Yankpad example:
+
 ;; ** Snippet 1
 ;; 
 ;;    This is a snippet.
@@ -39,6 +40,9 @@
 ;; ** Snippet 2
 ;;
 ;;    This is another snippet
+;;    ,* Org-mode doesn't like lines beginning with *
+;;    Typing ,* at the beginning of a line will be replaced with *
+;; 
 ;; * Category 2
 ;; ** Snippet 1
 ;;
@@ -82,7 +86,8 @@ Uses `yankpad-category', and prompts for it if it isn't set."
 Does not change `yankpad-category'."
   (let* ((snippets (yankpad--snippets category))
          (snippet (completing-read "Snippet: " snippets))
-         (text (cadr (assoc snippet snippets))))
+         (text (replace-regexp-in-string
+                "^,[*]" "*" (cadr (assoc snippet snippets)))))
     (if (and (require 'yasnippet nil t)
              yas-minor-mode)
         (if (region-active-p)

@@ -44,17 +44,17 @@ the yankpad:
 
   ,** Major-mode categories
 
-  If you have a category with the same name as a major-mode, that category will be
-  activated when switching major-mode. This only affects the local buffer and does
-  not modify the global category.
+      If you have a category with the same name as a major-mode, that category will be
+      activated when switching major-mode. This only affects the local buffer and does
+      not modify the global category.
 
   ,* my-projectile-project
 
   ,** Projectile based categories
 
-  If you have projectile installed (not a requirement) you can give a category the
-  same name as one of your projectile projects. That category will be activated
-  when using projectile-find-file on a file in the project.
+      If you have projectile installed (not a requirement) you can give a category the
+      same name as one of your projectile projects. That category will be activated
+      when using projectile-find-file on a file in the project.
 #+END_SRC
 
 * Setup
@@ -72,8 +72,12 @@ If you want different heading levels for the categories (default 1) or snippets 
 3. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode. In the same manner you can name a category to one of your Projectile project names (if Projectile is installed). If there's a clash between major-mode and Projectile categories, Projectile will take precedence.
 4. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.
 
+Since a =*= at the beginning of a line would specify a new heading, lines can not begin with =*=. However, you can write =,*= at the beginning of a line, which will be replaced by a =*= when expanding the snippet.
+
 Sometimes it may be useful to set the category automatically for a specific file. In this case you can add =yankpad-category= as a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html][file variable]], for instance by adding this line at the top of your file:
 
 #+BEGIN_SRC
 -*- yankpad-category: "Category name"; -*-
 #+END_SRC
+
+
