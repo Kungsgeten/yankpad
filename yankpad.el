@@ -40,8 +40,8 @@
 ;; ** Snippet 2
 ;;
 ;;    This is another snippet
-;;    ,* Org-mode doesn't like lines beginning with *
-;;    Typing ,* at the beginning of a line will be replaced with *
+;;    \* Org-mode doesn't like lines beginning with *
+;;    Typing \* at the beginning of a line will be replaced with *
 ;; 
 ;; * Category 2
 ;; ** Snippet 1
@@ -87,7 +87,7 @@ Does not change `yankpad-category'."
   (let* ((snippets (yankpad--snippets category))
          (snippet (completing-read "Snippet: " snippets))
          (text (replace-regexp-in-string
-                "^,[*]" "*" (cadr (assoc snippet snippets)))))
+                "^\\\\[*]" "*" (cadr (assoc snippet snippets)))))
     (if (and (require 'yasnippet nil t)
              yas-minor-mode)
         (if (region-active-p)
