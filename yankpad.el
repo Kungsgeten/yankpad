@@ -152,8 +152,11 @@ Does not change `yankpad-category'."
   "Get an alist of the snippets in CATEGORY-NAME.
 The car is the snippet name and the cdr is the snippet string."
   (mapcar (lambda (h)
-            (cons (org-element-property :raw-value h)
-                  (org-element-map h 'section #'org-element-interpret-data)))
+            (let ((heading (org-element-property :raw-value h))
+                  (text (org-element-map h 'section #'org-element-interpret-data)))
+              (cons heading
+                    (or text 
+                        (list (concat "\"" heading "\" is an empty category. Please check your yankpad file..."))))))
           (yankpad--snippet-elements category-name)))
 
 (defun yankpad-map-category-keybindings ()
@@ -163,13 +166,12 @@ Searches all snippets and takes their last tag and interprets it as a key bindin
   (define-prefix-command 'yankpad-map)
   (mapc (lambda (h)
           (let ((last-tag (car (last (org-element-property :tags h))))
-                (text (substring-no-properties
-                       (car (org-element-map h 'section #'org-element-interpret-data)))))
-            (when last-tag
+		(text (car (org-element-map h 'section #'org-element-interpret-data))))
+            (when (and text last-tag)
               (define-key yankpad-map (kbd (substring-no-properties last-tag))
                 `(lambda ()
                    (interactive)
-                   (yankpad--insert-snippet-text ,text))))))
+                   (yankpad--insert-snippet-text ,(substring-no-properties text)))))))
         (yankpad--snippet-elements yankpad-category)))
 
 (add-hook 'yankpad-switched-category-hook #'yankpad-map-category-keybindings)
