@@ -165,8 +165,9 @@ Searches all snippets and takes their last tag and interprets it as a key bindin
   (setq yankpad-map nil)
   (define-prefix-command 'yankpad-map)
   (mapc (lambda (h)
-          (let ((last-tag (car (last (org-element-property :tags h))))
-		(text (car (org-element-map h 'section #'org-element-interpret-data))))
+          (let* ((last-tag (car (last (org-element-property :tags h))))
+                 (text (and last-tag
+                            (car (org-element-map h 'section #'org-element-interpret-data)))))
             (when (and text last-tag)
               (define-key yankpad-map (kbd (substring-no-properties last-tag))
                 `(lambda ()
