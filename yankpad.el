@@ -35,15 +35,15 @@
 ;;; Yankpad example:
 
 ;; ** Snippet 1
-;; 
+;;
 ;;    This is a snippet.
-;; 
+;;
 ;; ** Snippet 2
 ;;
 ;;    This is another snippet
 ;;    \* Org-mode doesn't like lines beginning with *
 ;;    Typing \* at the beginning of a line will be replaced with *
-;; 
+;;
 ;; * Category 2
 ;; ** Snippet 1
 ;;
@@ -61,10 +61,10 @@
 (put 'yankpad-category 'safe-local-variable #'stringp)
 
 (defvar yankpad-category-heading-level 1
-  "The org-mode heading level of categories in the `yankpad-file'.")
+  "The `org-mode' heading level of categories in the `yankpad-file'.")
 
 (defvar yankpad-snippet-heading-level 2
-  "The org-mode heading level of snippets in the `yankpad-file'.")
+  "The `org-mode' heading level of snippets in the `yankpad-file'.")
 
 (defvar yankpad-switched-category-hook nil
   "Hooks run after changing `yankpad-category'.")
@@ -94,7 +94,7 @@ Uses `yankpad-category', and prompts for it if it isn't set."
   (yankpad-insert-from-category yankpad-category))
 
 (defun yankpad--insert-snippet-text (text)
-  "Inserts TEXT into buffer.
+  "Insert TEXT into buffer.
 Uses yasnippet if that is installed."
   (if (and (require 'yasnippet nil t)
            yas-minor-mode)
@@ -135,7 +135,7 @@ Does not change `yankpad-category'."
           (org-element-property :raw-value h))))))
 
 (defun yankpad--snippet-elements (category-name)
-  "Get all the snippet org-mode heading elements in CATEGORY-NAME."
+  "Get all the snippet `org-mode' heading elements in CATEGORY-NAME."
   (let ((data (yankpad--file-elements)))
     (org-element-map data 'headline
       (lambda (h)
@@ -155,12 +155,12 @@ The car is the snippet name and the cdr is the snippet string."
             (let ((heading (org-element-property :raw-value h))
                   (text (org-element-map h 'section #'org-element-interpret-data)))
               (cons heading
-                    (or text 
+                    (or text
                         (list (concat "\"" heading "\" is an empty category. Please check your yankpad file..."))))))
           (yankpad--snippet-elements category-name)))
 
 (defun yankpad-map-category-keybindings ()
-  "Replaces `yankpad-map' with current `yankpad-category' snippet bindings.
+  "Replace `yankpad-map' with current `yankpad-category' snippet bindings.
 Searches all snippets and takes their last tag and interprets it as a key binding."
   (setq yankpad-map nil)
   (define-prefix-command 'yankpad-map)
