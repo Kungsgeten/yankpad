@@ -54,6 +54,10 @@
 ;;    This is another snippet
 ;;    \* Org-mode doesn't like lines beginning with *
 ;;    Typing \* at the beginning of a line will be replaced with *
+;; 
+;;    If yanking a snippet into org-mode, this will respect the
+;;    current tree level by default.  Set the variable
+;;    `yankpad-respect-current-org-level' to nil in order to change that.
 ;;
 ;; * Category 2
 ;; ** Snippet 1
@@ -61,8 +65,8 @@
 ;;    This is yet another snippet, in a different category.
 ;; ** Snippet 2        :s:
 ;;
-;;    This snippet will be bound to "s" in yankpad-map.  Let's say you bind
-;;    yankpad-map to f7, you can now press "f7 s" to insert this snippet.
+;;    This snippet will be bound to "s" in `yankpad-map'.  Let's say you bind
+;;    `yankpad-map' to f7, you can now press "f7 s" to insert this snippet.
 ;;
 ;; ** magit-status          :func:
 ;; ** Run magit-status      :func:m:
@@ -88,6 +92,9 @@
 
 (defvar yankpad-snippet-heading-level 2
   "The `org-mode' heading level of snippets in the `yankpad-file'.")
+
+(defvar yankpad-respect-current-org-level t
+  "Whether to respect `org-current-level' when using \* in snippets and yanking them into `org-mode' buffers.")
 
 (defvar yankpad-switched-category-hook nil
   "Hooks run after changing `yankpad-category'.")
@@ -151,8 +158,15 @@ If non-nil, CONTENT should hold a single `org-mode' src-block, which will be exe
       (yankpad--trigger-snippet-function name content))
      (t
       (if (car content)
-          (yankpad--insert-snippet-text (replace-regexp-in-string
-                                         "^\\\\[*]" "*" (car content)))
+          ;; Respect the tree levl when yanking org-mode headings.
+          (let ((prepend-asterisks 1))
+            (when (and yankpad-respect-current-org-level
+                       (equal major-mode 'org-mode)
+                       (org-current-level))
+              (setq prepend-asterisks (org-current-level)))
+            (yankpad--insert-snippet-text
+             (replace-regexp-in-string
+              "^\\\\[*]" (make-string prepend-asterisks ?*) (car content))))
         (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))
 
 (defun yankpad-insert-from-category (category)
