@@ -5,7 +5,7 @@
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 1.20
+;; Version: 1.30
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ()
 
@@ -39,9 +39,12 @@
 ;; name a categories to the same name as your projecile projects, and they will
 ;; be switched to when using `projectile-find-file'.
 ;;
-;; To insert a snippet from the yankpad, use `yankpad-insert'.  If you need to
-;; change the category, use `yankpad-set-category'.  Here's an example of what
-;; yankpad.org could look like:
+;; To insert a snippet from the yankpad, use `yankpad-insert' or
+;; `yankpad-expand'.  `yankpad-expand' will look for a keyword at point, and
+;; expand a snippet with a name starting with that word, followed by
+;; `yankpad-expand-separator' (a colon by default).  If you need to change the
+;; category, use `yankpad-set-category'.  Here's an example of what yankpad.org
+;; could look like:
 
 ;;; Yankpad example:
 
@@ -49,9 +52,10 @@
 ;;
 ;;    This is a snippet.
 ;;
-;; ** Snippet 2
+;; ** snip2: Snippet 2
 ;;
-;;    This is another snippet
+;;    This is another snippet.  This snippet can be expanded by first typing "snip2" and
+;;    then executing the `yankpad-expand' command.
 ;;    \* Org-mode doesn't like lines beginning with *
 ;;    Typing \* at the beginning of a line will be replaced with *
 ;; 
@@ -99,6 +103,12 @@
 (defvar yankpad-switched-category-hook nil
   "Hooks run after changing `yankpad-category'.")
 
+(defvar yankpad-expand-separator ":"
+  "String used to separate a keyword, at the start of a snippet name, from the title.  Used for `yankpad-expand'.")
+
+(defvar yankpad-active-snippets nil
+  "A cached version of the snippets in the current category.")
+
 (define-prefix-command 'yankpad-map)
 
 (defun yankpad-set-category ()
@@ -113,6 +123,20 @@
   (set (make-local-variable 'yankpad-category) category)
   (run-hooks 'yankpad-switched-category-hook))
 
+(defun yankpad-set-active-snippets ()
+  "Set the `yankpad-active-snippets' to the snippets in the active category."
+  (when yankpad-category
+    (setq yankpad-active-snippets (yankpad--snippets yankpad-category))))
+
+(defun yankpad-set-active-snippets-before-saving-yankpad-file ()
+  "When `yankpad-file' is saved, the active snippets might have changed.
+This function is added to `before-save-hook'."
+  (when (equal buffer-file-name yankpad-file)
+    (yankpad-set-active-snippets)))
+
+(add-hook 'yankpad-switched-category-hook #'yankpad-set-active-snippets)
+(add-hook 'after-save-hook #'yankpad-set-active-snippets-before-saving-yankpad-file)
+
 ;;;###autoload
 (defun yankpad-insert ()
   "Insert an entry from the yankpad.
@@ -121,7 +145,7 @@ Uses `yankpad-category', and prompts for it if it isn't set."
   (unless yankpad-category
     (or (yankpad-local-category-to-major-mode)
         (yankpad-set-category)))
-  (yankpad-insert-from-category yankpad-category))
+  (yankpad-insert-from-current-category))
 
 (defun yankpad--insert-snippet-text (text)
   "Insert TEXT into buffer.
@@ -169,12 +193,29 @@ If non-nil, CONTENT should hold a single `org-mode' src-block, which will be exe
               "^\\\\[*]" (make-string prepend-asterisks ?*) (car content))))
         (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))
 
-(defun yankpad-insert-from-category (category)
-  "Choose a yankpad entry from CATEGORY.
+(defun yankpad-insert-from-current-category ()
+  "Choose a yankpad entry from `yankpad-category'.
 Does not change `yankpad-category'."
-  (let* ((snippets (yankpad--snippets category))
-         (snippet (completing-read "Snippet: " snippets)) )
-    (yankpad--run-snippet (assoc snippet snippets))))
+  (let ((snippet (completing-read "Snippet: " yankpad-active-snippets)))
+    (yankpad--run-snippet (assoc snippet yankpad-active-snippets))))
+
+(defun yankpad-expand ()
+  "Replace word at point with a snippet.
+Only works if the word is found in the first matching group of `yankpad-expand-keyword-regex'."
+  (interactive)
+  (let* ((word (word-at-point))
+         (bounds (bounds-of-thing-at-point 'word))
+         (snippet-prefix (concat word yankpad-expand-separator)))
+    (when (and word yankpad-category)
+      (catch 'loop
+        (mapc
+         (lambda (snippet)
+           (when (string-prefix-p snippet-prefix (car snippet))
+             (delete-region (car bounds) (cdr bounds))
+             (yankpad--run-snippet snippet)
+             (throw 'loop snippet)))
+         yankpad-active-snippets)
+        nil))))
 
 (defun yankpad-edit ()
   "Open the yankpad file for editing."
