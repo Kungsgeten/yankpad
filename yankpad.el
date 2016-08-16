@@ -106,8 +106,14 @@
 (defvar yankpad-expand-separator ":"
   "String used to separate a keyword, at the start of a snippet name, from the title.  Used for `yankpad-expand'.")
 
-(defvar yankpad-active-snippets nil
+(defvar yankpad--active-snippets nil
   "A cached version of the snippets in the current category.")
+
+(defun yankpad-active-snippets ()
+  "Get the snippets in the current category."
+  (if yankpad--active-snippets
+      yankpad--active-snippets
+    (yankpad-set-active-snippets)))
 
 (define-prefix-command 'yankpad-map)
 
@@ -121,12 +127,13 @@
 (defun yankpad-set-local-category (category)
   "Set `yankpad-category' to CATEGORY locally."
   (set (make-local-variable 'yankpad-category) category)
+  (set (make-local-variable 'yankpad--active-snippets) nil)
   (run-hooks 'yankpad-switched-category-hook))
 
 (defun yankpad-set-active-snippets ()
   "Set the `yankpad-active-snippets' to the snippets in the active category."
   (when yankpad-category
-    (setq yankpad-active-snippets (yankpad--snippets yankpad-category))))
+    (setq yankpad--active-snippets (yankpad--snippets yankpad-category))))
 
 (defun yankpad-set-active-snippets-before-saving-yankpad-file ()
   "When `yankpad-file' is saved, the active snippets might have changed.
@@ -134,7 +141,11 @@ This function is added to `before-save-hook'."
   (when (equal buffer-file-name yankpad-file)
     (yankpad-set-active-snippets)))
 
-(add-hook 'yankpad-switched-category-hook #'yankpad-set-active-snippets)
+(defun yankpad-remove-active-snippets ()
+  "Remove all entries in `yankpad--active-snippets`."
+  (setq yankpad--active-snippets nil))
+
+(add-hook 'yankpad-switched-category-hook #'yankpad-remove-active-snippets)
 (add-hook 'after-save-hook #'yankpad-set-active-snippets-before-saving-yankpad-file)
 
 ;;;###autoload
@@ -196,8 +207,8 @@ If non-nil, CONTENT should hold a single `org-mode' src-block, which will be exe
 (defun yankpad-insert-from-current-category ()
   "Choose a yankpad entry from `yankpad-category'.
 Does not change `yankpad-category'."
-  (let ((snippet (completing-read "Snippet: " yankpad-active-snippets)))
-    (yankpad--run-snippet (assoc snippet yankpad-active-snippets))))
+  (let ((snippet (completing-read "Snippet: " (yankpad-active-snippets))))
+    (yankpad--run-snippet (assoc snippet (yankpad-active-snippets)))))
 
 (defun yankpad-expand ()
   "Replace word at point with a snippet.
@@ -214,7 +225,7 @@ Only works if the word is found in the first matching group of `yankpad-expand-k
              (delete-region (car bounds) (cdr bounds))
              (yankpad--run-snippet snippet)
              (throw 'loop snippet)))
-         yankpad-active-snippets)
+         (yankpad-active-snippets))
         nil))))
 
 (defun yankpad-edit ()
