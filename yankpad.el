@@ -24,8 +24,8 @@
 ;;
 ;; You can also add keybindings to snippets, by setting an `org-mode' tag on the
 ;; snippet.  The last tag will be interpreted as a keybinding, and the snippet
-;; will then be inserted into `yankpad-map'.  `yankpad-map' is not bound to any
-;; key by default.
+;; can be run by using `yankpad-map' followed by the key.  `yankpad-map' is not
+;; bound to any key by default.
 ;;
 ;; Another functionality is that snippets can include function calls, instead of
 ;; text.  In order to do this, the snippet heading should have a tag named
@@ -69,8 +69,8 @@
 ;;    This is yet another snippet, in a different category.
 ;; ** Snippet 2        :s:
 ;;
-;;    This snippet will be bound to "s" in `yankpad-map'.  Let's say you bind
-;;    `yankpad-map' to f7, you can now press "f7 s" to insert this snippet.
+;;    This snippet will be bound to "s" when using `yankpad-map'.  Let's say you
+;;    bind `yankpad-map' to f7, you can now press "f7 s" to insert this snippet.
 ;;
 ;; ** magit-status          :func:
 ;; ** Run magit-status      :func:m:
@@ -89,7 +89,7 @@
 
 (defvar yankpad-category nil
   "The current yankpad category.  Change with `yankpad-set-category'.")
-(put 'yankpad-category 'safe-local-variable #'stringp)
+(put 'yankpad-category 'safe-local-variable #'string-or-null-p)
 
 (defvar yankpad-category-heading-level 1
   "The `org-mode' heading level of categories in the `yankpad-file'.")
@@ -115,8 +115,6 @@
       yankpad--active-snippets
     (yankpad-set-active-snippets)))
 
-(define-prefix-command 'yankpad-map)
-
 (defun yankpad-set-category ()
   "Change the yankpad category."
   (interactive)
@@ -135,18 +133,11 @@
   (when yankpad-category
     (setq yankpad--active-snippets (yankpad--snippets yankpad-category))))
 
-(defun yankpad-set-active-snippets-before-saving-yankpad-file ()
-  "When `yankpad-file' is saved, the active snippets might have changed.
-This function is added to `before-save-hook'."
-  (when (equal buffer-file-name yankpad-file)
-    (yankpad-set-active-snippets)))
-
 (defun yankpad-remove-active-snippets ()
   "Remove all entries in `yankpad--active-snippets`."
   (setq yankpad--active-snippets nil))
 
 (add-hook 'yankpad-switched-category-hook #'yankpad-remove-active-snippets)
-(add-hook 'after-save-hook #'yankpad-set-active-snippets-before-saving-yankpad-file)
 
 ;;;###autoload
 (defun yankpad-insert ()
@@ -276,26 +267,24 @@ The car is the snippet name and the cdr is a cons (tags snippet-string)."
               (cons heading (cons tags text))))
           (yankpad--snippet-elements category-name)))
 
-(defun yankpad-map-category-keybindings ()
-  "Replace `yankpad-map' with current `yankpad-category' snippet bindings.
-Searches all snippets and takes their last tag and interprets it as a key binding."
-  (setq yankpad-map nil)
-  (define-prefix-command 'yankpad-map)
-  (mapc (lambda (h)
-          (let ((last-tag (car (last (org-element-property :tags h)))) )
+(defun yankpad-map ()
+  "Create and execute a keymap out of the last tags of snippets in `yankpad-category'."
+  (interactive)
+  (define-prefix-command 'yankpad-keymap)
+  (mapc (lambda (snippet)
+          (let ((last-tag (car (last (cadr snippet)))))
             (when (and last-tag (not (eq last-tag "func")))
-              (let ((heading (org-element-property :raw-value h))
-                    (content (org-element-map h 'section #'org-element-interpret-data))
-                    (tags (org-element-property :tags h)))
-                (define-key yankpad-map (kbd (substring-no-properties last-tag))
+              (let ((heading (car snippet))
+                    (content (cddr snippet))
+                    (tags (cadr  snippet)))
+                (define-key yankpad-keymap (kbd (substring-no-properties last-tag))
                   `(lambda ()
                      (interactive)
                      (yankpad--run-snippet (cons ,heading
                                                  (cons (list ,@tags)
                                                        (list ,@content))))))))))
-        (yankpad--snippet-elements yankpad-category)))
-
-(add-hook 'yankpad-switched-category-hook #'yankpad-map-category-keybindings)
+        (yankpad-active-snippets))
+  (set-transient-map 'yankpad-keymap))
 
 (defun yankpad-local-category-to-major-mode ()
   "Try to change `yankpad-category' to match the buffer's major mode.

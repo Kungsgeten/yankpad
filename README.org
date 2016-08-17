@@ -16,7 +16,7 @@ the yankpad:
 
       And here's another snippet. This snippet has tags, and the last of these
       tags should be a key. This will bind the snippet to the key (in this case
-      "o") in a prefix map called yankpad-map.
+      "o") when first calling yankpad-map.
 
   ,** expandword: Snippet with keyword expansion
 
@@ -100,7 +100,7 @@ Here's an example setup using the excellent [[https://github.com/jwiegley/use-pa
 
 1. Add snippet entries to your =yankpad-file=. Level 1 headings are categories and level 2 headings are snippets (by default).
 2. If a snippet has a tag named =func=, it won't insert text. Instead a function will be executed upon "inserting" the snippet. The name of the snippet can be an elisp function, which will be run without arguments. Instead, the function could hold a single =org-mode= src-block, which will be executed in a separate buffer (so the code in the src-block does not have access to the current buffer).
-3. The last tag of a snippet (except if the last tag is =func=) will add the tag as a keybinding into =yankpad-map=. This way you could bind =yankpad-map= to a key and press that key, followed by the tag key, in order to insert the snippet.
+3. The last tag of a snippet (except if the last tag is =func=) will add the tag as a keybinding when first calling =yankpad-map=. This way you could bind =yankpad-map= to a key and press that key, followed by the tag key, in order to insert the snippet.
 4. Insert a snippet with =M-x yankpad-insert=. If the snippet has a keyword, you can write that keyword into the buffer and use =M-x yankpad-expand= instead. It may be useful to bind these commands to some key on your keyboard.
 5. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode. In the same manner you can name a category to one of your Projectile project names (if Projectile is installed). If there's a clash between major-mode and Projectile categories, Projectile will take precedence.
 6. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.
@@ -111,12 +111,6 @@ Sometimes it may be useful to set the category automatically for a specific file
 
 #+BEGIN_SRC
 -*- yankpad-category: "Category name"; -*-
-#+END_SRC
-
-The above will not add keybindings to =yankpad-map=. In order to do that on a file-to-file basis, add the following to the top of the file instead:
-
-#+BEGIN_SRC
--*- eval: (yankpad-set-local-category "Category name") -*-
 #+END_SRC
 
 * Changelog
