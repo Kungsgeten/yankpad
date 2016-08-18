@@ -5,7 +5,7 @@
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 1.30
+;; Version: 1.31
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ()
 
@@ -43,8 +43,11 @@
 ;; `yankpad-expand'.  `yankpad-expand' will look for a keyword at point, and
 ;; expand a snippet with a name starting with that word, followed by
 ;; `yankpad-expand-separator' (a colon by default).  If you need to change the
-;; category, use `yankpad-set-category'.  Here's an example of what yankpad.org
-;; could look like:
+;; category, use `yankpad-set-category'.
+;;
+;; For further customization, please see the Github page: https://github.com/Kungsgeten/yankpad
+;; 
+;; Here's an example of what yankpad.org could look like:
 
 ;;; Yankpad example:
 
@@ -149,15 +152,18 @@ Uses `yankpad-category', and prompts for it if it isn't set."
         (yankpad-set-category)))
   (yankpad-insert-from-current-category))
 
-(defun yankpad--insert-snippet-text (text)
-  "Insert TEXT into buffer.
-Use yasnippet if available."
+(defun yankpad--insert-snippet-text (text indent)
+  "Insert TEXT into buffer.  INDENT is whether/how to indent the snippet.
+Use yasnippet and `yas-indent-line' if available."
   (if (and (require 'yasnippet nil t)
            yas-minor-mode)
       (if (region-active-p)
-          (yas-expand-snippet text (region-beginning) (region-end))
-        (yas-expand-snippet text))
-    (insert text)))
+          (yas-expand-snippet text (region-beginning) (region-end) `((yas-indent-line (quote ,indent))))
+        (yas-expand-snippet text nil nil `((yas-indent-line (quote ,indent)))))
+    (let ((start (point)))
+      (insert text)
+      (when indent
+        (indent-region start (point))))))
 
 (defun yankpad--trigger-snippet-function (snippetname content)
   "SNIPPETNAME can be an elisp function, without arguments, if CONTENT is nil.
@@ -185,14 +191,24 @@ If non-nil, CONTENT should hold a single `org-mode' src-block, which will be exe
      (t
       (if (car content)
           ;; Respect the tree levl when yanking org-mode headings.
-          (let ((prepend-asterisks 1))
+          (let ((prepend-asterisks 1)
+                (indent (cond ((member "indent_nil" tags)
+                               nil)
+                              ((member "indent_fixed" tags)
+                               'fixed)
+                              ((member "indent_auto" tags)
+                               'auto)
+                              ((and (require 'yasnippet nil t) yas-minor-mode)
+                               yas-indent-line)
+                              (t t))))
             (when (and yankpad-respect-current-org-level
                        (equal major-mode 'org-mode)
                        (org-current-level))
               (setq prepend-asterisks (org-current-level)))
             (yankpad--insert-snippet-text
              (replace-regexp-in-string
-              "^\\\\[*]" (make-string prepend-asterisks ?*) (car content))))
+              "^\\\\[*]" (make-string prepend-asterisks ?*) (car content))
+             indent))
         (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))
 
 (defun yankpad-insert-from-current-category ()
@@ -273,7 +289,9 @@ The car is the snippet name and the cdr is a cons (tags snippet-string)."
   (define-prefix-command 'yankpad-keymap)
   (mapc (lambda (snippet)
           (let ((last-tag (car (last (cadr snippet)))))
-            (when (and last-tag (not (eq last-tag "func")))
+            (when (and last-tag
+                       (not (eq last-tag "func"))
+                       (not (string-prefix-p "indent_" last-tag)))
               (let ((heading (car snippet))
                     (content (cddr snippet))
                     (tags (cadr  snippet)))
