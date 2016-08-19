@@ -155,6 +155,7 @@ Uses `yankpad-category', and prompts for it if it isn't set."
 (defun yankpad--insert-snippet-text (text indent)
   "Insert TEXT into buffer.  INDENT is whether/how to indent the snippet.
 Use yasnippet and `yas-indent-line' if available."
+  (setq text (substring-no-properties text 0 -1))
   (if (and (require 'yasnippet nil t)
            yas-minor-mode)
       (if (region-active-p)
