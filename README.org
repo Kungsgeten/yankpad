@@ -113,17 +113,21 @@ Sometimes it may be useful to set the category automatically for a specific file
 -*- yankpad-category: "Category name"; -*-
 #+END_SRC
 
+You can also set the =yankpad-category= to =nil= in this way, if you do not want any default category triggered for that file.
+
 * Special tags
 
 Snippets in your Yankpad can have tags, and some of these have special meanings:
 
 - =func= :: If a snippet has a tag named =func=, it won't insert text. Instead a function will be executed upon "inserting" the snippet. The name of the snippet can be an elisp function, which will be run without arguments. Instead, the function could hold a single =org-mode= src-block, which will be executed in a separate buffer (so the code in the src-block does not have access to the current buffer).
+- =results= :: Works like =func=, but the output of the function will be inserted into the buffer.
 - =indent_nil= :: By default the inserted text will be indented (uses =indent_region= or the settings of =yas-indent-line= if =yas-minor-mode= is active). By using =indent_nil=, no indentation will occur.
 - =indent_auto= :: Sets =yas-indent-line= to =auto= for this snippet.
 - =indent_fixed= :: Sets =yas-indent-line= to =fixed= for this snippet.
 - =<key>= :: The last tag of a snippet (except if its one of the above) will add the tag as a keybinding when first calling =yankpad-map=. If the last tag is =o=, then using =M-x yankpad-map o= will insert that snippet. This is most useful if you bind =yankpad-map= to a key.
 * Changelog
 
+- 1.40 (August 2016) :: Added =results= tag. Works as =func= tag, but the output of the function is inserted into the buffer.
 - 1.31 (August 2016) :: Snippets are indented as default. The indentation behaviour can be changed by using =indent_nil=, =indent_fixed=, or =indent_auto= as tags for the snippet(s).
 - 1.30 (August 2016) :: Snippets can now have keywords. If typing the snippet keyword into the buffer, the snippet can be expanded by calling =yankpad-expand=. Just name the snippet =expandword: Snippet name= and you can type =expandword M-x yankpad-expand= to insert it.
 - 1.20 (July 2016) :: Snippets can be used to execute functions, instead of inserting text. Add the tag =func= to your snippet. The snippet can contain an =org-mode= src-block, which will be executed, or the snippet may be named the same as an emacs-lisp function, which will be executed without arguments.

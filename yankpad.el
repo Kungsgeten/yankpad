@@ -5,7 +5,7 @@
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 1.31
+;; Version: 1.40
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ()
 
@@ -168,18 +168,20 @@ Use yasnippet and `yas-indent-line' if available."
 
 (defun yankpad--trigger-snippet-function (snippetname content)
   "SNIPPETNAME can be an elisp function, without arguments, if CONTENT is nil.
-If non-nil, CONTENT should hold a single `org-mode' src-block, which will be executed."
+If non-nil, CONTENT should hold a single `org-mode' src-block, to be executed.
+Return the result of the function output as a string."
   (if (car content)
       (with-temp-buffer
         (delay-mode-hooks
           (org-mode)
           (insert (car content))
           (goto-char (point-min))
-          (when (org-in-src-block-p)
-            (org-babel-execute-src-block))))
+          (if (org-in-src-block-p)
+              (prin1-to-string (org-babel-execute-src-block))
+            (error "No org-mode src-block at start of snippet"))))
     (if (intern-soft snippetname)
-        (funcall (intern-soft snippetname))
-      (message (concat "\"" snippetname "\" isn't a function.")))))
+        (prin1-to-string (funcall (intern-soft snippetname)))
+      (error (concat "\"" snippetname "\" isn't a function")))))
 
 (defun yankpad--run-snippet (snippet)
   "Triggers the SNIPPET behaviour."
@@ -189,6 +191,8 @@ If non-nil, CONTENT should hold a single `org-mode' src-block, which will be exe
     (cond
      ((member "func" tags)
       (yankpad--trigger-snippet-function name content))
+     ((member "results" tags)
+      (insert (yankpad--trigger-snippet-function name content)))
      (t
       (if (car content)
           ;; Respect the tree levl when yanking org-mode headings.
@@ -293,6 +297,7 @@ The car is the snippet name and the cdr is a cons (tags snippet-string)."
           (let ((last-tag (car (last (cadr snippet)))))
             (when (and last-tag
                        (not (eq last-tag "func"))
+                       (not (eq last-tag "results"))
                        (not (string-prefix-p "indent_" last-tag)))
               (let ((heading (car snippet))
                     (content (cddr snippet))
