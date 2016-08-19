@@ -260,12 +260,13 @@ Only works if the word is found in the first matching group of `yankpad-expand-k
 
 (defun yankpad--snippet-elements (category-name)
   "Get all the snippet `org-mode' heading elements in CATEGORY-NAME."
-  (let ((data (yankpad--file-elements)))
+  (let ((data (yankpad--file-elements))
+        (lineage-func (if (version< (org-version) "8.3")
+                          #'org-export-get-genealogy
+                        #'org-element-lineage)))
     (org-element-map data 'headline
       (lambda (h)
-        (let ((lineage (if (version< (org-version) "8.3")
-                           (org-export-get-genealogy h)
-                         (org-element-lineage h))))
+        (let ((lineage (funcall lineage-func h)))
           (when (and (equal (org-element-property :level h)
                             yankpad-snippet-heading-level)
                      (member category-name
