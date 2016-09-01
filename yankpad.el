@@ -132,9 +132,12 @@
   (run-hooks 'yankpad-switched-category-hook))
 
 (defun yankpad-set-active-snippets ()
-  "Set the `yankpad-active-snippets' to the snippets in the active category."
-  (when yankpad-category
-    (setq yankpad--active-snippets (yankpad--snippets yankpad-category))))
+  "Set the `yankpad-active-snippets' to the snippets in the active category.
+If no active category, call `yankpad-set-category'."
+  (if yankpad-category
+      (setq yankpad--active-snippets (yankpad--snippets yankpad-category))
+    (yankpad-set-category)
+    (yankpad-set-active-snippets)))
 
 (defun yankpad-remove-active-snippets ()
   "Remove all entries in `yankpad--active-snippets`."
@@ -216,11 +219,17 @@ Return the result of the function output as a string."
              indent))
         (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))
 
-(defun yankpad-insert-from-current-category ()
-  "Choose a yankpad entry from `yankpad-category'.
+(defun yankpad-insert-from-current-category (&optional name)
+  "Insert snippet NAME from `yankpad-category'.  Prompts for NAME unless set.
 Does not change `yankpad-category'."
-  (let ((snippet (completing-read "Snippet: " (yankpad-active-snippets))))
-    (yankpad--run-snippet (assoc snippet (yankpad-active-snippets)))))
+  (let ((snippets (yankpad-active-snippets)))
+    (unless name
+      (setq name (completing-read "Snippet: " snippets)))
+    (let ((snippet (assoc name (yankpad-active-snippets))))
+      (if snippet
+          (yankpad--run-snippet snippet)
+        (message (concat "No snippet named " name))
+        nil))))
 
 (defun yankpad-expand ()
   "Replace word at point with a snippet.
