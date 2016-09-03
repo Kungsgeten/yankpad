@@ -139,6 +139,16 @@ If no active category, call `yankpad-set-category'."
     (yankpad-set-category)
     (yankpad-set-active-snippets)))
 
+(defun yankpad-append-category (&optional category)
+  "Add snippets from CATEGORY into the list of active snippets.
+Prompts for CATEGORY if it isn't provided."
+  (interactive)
+  (unless category
+    (setq category (completing-read "Category: " (yankpad--categories))))
+  (unless yankpad--active-snippets (yankpad-set-active-snippets))
+  (setq yankpad--active-snippets
+        (append yankpad--active-snippets (yankpad--snippets category))))
+
 (defun yankpad-remove-active-snippets ()
   "Remove all entries in `yankpad--active-snippets`."
   (setq yankpad--active-snippets nil))
