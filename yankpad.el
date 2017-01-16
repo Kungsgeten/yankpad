@@ -5,7 +5,7 @@
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 1.50
+;; Version: 1.51
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ()
 
@@ -49,7 +49,7 @@
 ;; time), use `yankpad-append-category'.
 ;;
 ;; For further customization, please see the Github page: https://github.com/Kungsgeten/yankpad
-;; 
+;;
 ;; Here's an example of what yankpad.org could look like:
 
 ;;; Yankpad example:
@@ -65,7 +65,7 @@
 ;;    then executing the `yankpad-expand' command.
 ;;    \* Org-mode doesn't like lines beginning with *
 ;;    Typing \* at the beginning of a line will be replaced with *
-;; 
+;;
 ;;    If yanking a snippet into org-mode, this will respect the
 ;;    current tree level by default.  Set the variable
 ;;    `yankpad-respect-current-org-level' to nil in order to change that.
@@ -84,11 +84,11 @@
 ;;    #+BEGIN_SRC emacs-lisp
 ;;    (magit-status)
 ;;    #+END_SRC
-;; 
+;;
 ;; * org-mode
 ;; ** Snippet 1
 ;;    This category will be switched to automatically when visiting an org-mode buffer.
-;; 
+;;
 ;; * Category 3
 ;;   :PROPERTIES:
 ;;   :INCLUDE:  Category 1|Category 2
@@ -96,7 +96,7 @@
 ;; ** A snippet among many!
 ;;    This category will include snippets from Category 1 and Category 2.
 ;;    This is done by setting the INCLUDE property of the category.
-;;  
+;;
 ;;; Code:
 
 (require 'org-element)
@@ -177,11 +177,14 @@ Prompts for CATEGORY if it isn't provided."
     (setq yankpad--active-snippets
           (append yankpad--active-snippets (yankpad--snippets category)))))
 
-(defun yankpad-remove-active-snippets ()
-  "Remove all entries in `yankpad--active-snippets`."
+(defun yankpad-reload ()
+  "Clear the snippet cache.
+The next try to `yankpad-insert` will reload `yankpad-file`.
+Useful to run after editing the `yankpad-file`."
+  (interactive)
   (setq yankpad--active-snippets nil))
 
-(add-hook 'yankpad-switched-category-hook #'yankpad-remove-active-snippets)
+(add-hook 'yankpad-switched-category-hook #'yankpad-reload)
 
 ;;;###autoload
 (defun yankpad-insert ()

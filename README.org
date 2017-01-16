@@ -64,8 +64,8 @@ the yankpad:
 
   ,** Include other categories
 
-  Snippets from Category 1 and Category 2 will be appended to this category. 
-  This is done by setting the INCLUDE property of the category. Categories 
+  Snippets from Category 1 and Category 2 will be appended to this category.
+  This is done by setting the INCLUDE property of the category. Categories
   are separated by a pipe.
 
   ,* org-mode
@@ -116,6 +116,7 @@ Here's an example setup using the excellent [[https://github.com/jwiegley/use-pa
 3. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode. In the same manner you can name a category to one of your Projectile project names (if Projectile is installed). If both cases are true, the Projectile category becomes active, but the snippets from the major mode are appended as well. If you later change category with =M-x yankpad-set-category=, the major-mode and project snippets will be appended to the chosen category.
 4. If you want to append snippets from another of your categories (basically like having two or more categories active at the same time), use =M-x yankpad-append-category=. If you want one of your categories to /always/ include snippets from another category; set the =INCLUDE= [[http://orgmode.org/manual/Property-syntax.html#Property-syntax][property]] of the category heading (several categories can be included this way, by separating them with =|=, see example at the top of this readme).
 5. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.
+6. Yankpad caches your snippets, making it a bit snappier to insert snippets from the yankpad. If you've edited your =yankpad-file= you might want to use =M-x yankpad-reload= to clear the snippet cache and reload your snippets in the current category.
 
 Since a =*= at the beginning of a line would specify a new heading, lines can not begin with =*=. However, you can write =\*= at the beginning of a line, which will be replaced by a =*= when expanding the snippet. If you use this in order to yank snippets into an =org-mode= buffer, the new headings will be automatically indented -- depending on the current level -- by default. This can be changed by setting the variable =yankpad-respect-current-org-level= to =nil=.
 
@@ -139,6 +140,7 @@ Snippets in your Yankpad can have tags, and some of these have special meanings:
 - =<key>= :: The last tag of a snippet (except if its one of the above) will add the tag as a keybinding when first calling =yankpad-map=. If the last tag is =o=, then using =M-x yankpad-map o= will insert that snippet. This is most useful if you bind =yankpad-map= to a key.
 * Changelog
 
+- 1.51 (January 2017) :: Added =yankpad-reload=.
 - 1.50 (September 2016) :: It is now possible to have active snippets from several categories at once, by using =M-x yankpad-append-category= or by modifying the yankpad file. This is done automatically for major mode and projectile categories.
 - 1.40 (August 2016) :: Added =results= tag. Works as =func= tag, but the output of the function is inserted into the buffer.
 - 1.31 (August 2016) :: Snippets are indented as default. The indentation behaviour can be changed by using =indent_nil=, =indent_fixed=, or =indent_auto= as tags for the snippet(s).
