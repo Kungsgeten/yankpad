@@ -1,11 +1,11 @@
 ;;; yankpad.el --- Paste snippets from an org-mode file
 
 ;; Copyright (C) 2016 Erik Sjöstrand
-;; MIT License
+;; MIT License, except company-yankpad and company-yankpad--name-or-key (GPL 3)
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 1.51
+;; Version: 1.6
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ()
 
@@ -46,7 +46,8 @@
 ;; `yankpad-expand-separator' (a colon by default).  If you need to change the
 ;; category, use `yankpad-set-category'.  If you want to append snippets from
 ;; another category (basically having several categories active at the same
-;; time), use `yankpad-append-category'.
+;; time), use `yankpad-append-category'.  If you have company-mode enabled,
+;; you can also use `company-yankpad`.
 ;;
 ;; For further customization, please see the Github page: https://github.com/Kungsgeten/yankpad
 ;;
@@ -100,6 +101,7 @@
 ;;; Code:
 
 (require 'org-element)
+(require 'thingatpt)
 (when (version< (org-version) "8.3")
   (require 'ox))
 
@@ -239,7 +241,7 @@ Return the result of the function output as a string."
       (insert (yankpad--trigger-snippet-function name content)))
      (t
       (if (car content)
-          ;; Respect the tree levl when yanking org-mode headings.
+          ;; Respect the tree level when yanking org-mode headings.
           (let ((prepend-asterisks 1)
                 (indent (cond ((member "indent_nil" tags)
                                nil)
@@ -354,7 +356,7 @@ The car is the snippet name and the cdr is a cons (tags snippet-string)."
                           (tags (org-element-property :tags h)))
                       (cons heading (cons tags text))))
                   (yankpad--snippet-elements category-name))))
-    (append snippets (reduce #'append (mapcar #'yankpad--snippets include)))))
+    (append snippets (cl-reduce #'append (mapcar #'yankpad--snippets include)))))
 
 (defun yankpad-map ()
   "Create and execute a keymap out of the last tags of snippets in `yankpad-category'."
@@ -399,6 +401,47 @@ If successful, make `yankpad-category' buffer-local."
 
 (eval-after-load "projectile"
   (add-hook 'projectile-find-file-hook #'yankpad-local-category-to-projectile))
+
+;; `company-yankpad--name-or-key' and `company-yankpad' are Copyright (C) 2017
+;; Sidart Kurias (https://github.com/sid-kurias/) and are included by permission
+;; from the author. They're licensed under GNU GPL 3 (http://www.gnu.org/licenses/).
+
+(defun company-yankpad--name-or-key (arg fn)
+  "Return candidates that match the string entered.
+ARG is what the user has entered and expects a match for.
+FN is the function that will extract either name or key."
+  (delq nil
+        (mapcar
+         (lambda (c) (let ((snip (split-string (car c)  yankpad-expand-separator)))
+                       (if (string-prefix-p arg (car snip) t)
+                           (progn
+                             (if (string-match yankpad-expand-separator (car c))
+                                 (set-text-properties 0 1 '(type keyword) (car snip))
+                               (set-text-properties 0 1 '(type name) (car snip)))
+                             (funcall fn snip)))))
+         (yankpad-active-snippets))))
+
+;;;###autoload
+(defun company-yankpad (command &optional arg &rest ignored)
+  "Company backend for yankpad."
+  (interactive (list 'interactive))
+  (if (require 'company nil t)
+      (case command
+        (interactive (company-begin-backend 'company-yankpad))
+        (prefix (company-grab-symbol))
+        (annotation (car (company-yankpad--name-or-key
+                          arg
+                          (lambda (snippet) (mapconcat 'identity (cdr snippet) " ")))))
+        (candidates (company-yankpad--name-or-key arg (lambda (snippet) (car snippet))))
+        (post-completion (let ((type (get-text-property 0 'type arg)))
+                           (if (equal type 'keyword)
+                               (yankpad-expand)
+                             (let ((word (word-at-point))
+                                   (bounds (bounds-of-thing-at-point 'word)))
+                               (delete-region (car bounds) (cdr bounds))
+                               (yankpad-insert-from-current-category arg)))))
+        (duplicates t))
+    (error "You need company in order to use company-yankpad")))
 
 (provide 'yankpad)
 ;;; yankpad.el ends here

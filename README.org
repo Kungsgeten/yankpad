@@ -90,7 +90,8 @@ the yankpad:
 1. Install =yankpad= from Melpa, or download =yankpad.el= and add it to your load-path and require it.
 2. The default location for the yankpad file is =yankpad.org= in your =org-directory=. This can be changed by modifying the =yankpad-file= variable.
 3. Optionally bind =yankpad-map=, =yankpad-insert=, and/or =yankpad-expand= to a key.
-4. That's it!
+4. Optionally install =yasnippet= and/or =projectile= and/or =company-mode=, if you want the additional yankpad features that those package provide.
+5. That's it!
 
 If you want different heading levels for the categories (default 1) or snippets (default 2), change the value of =yankpad-category-heading-level= and/or =yankpad-snippet-heading-level=.
 
@@ -106,13 +107,15 @@ Here's an example setup using the excellent [[https://github.com/jwiegley/use-pa
     (setq yankpad-file "~/yankpad.org")
     :config
     (bind-key "<f7>" 'yankpad-map)
-    (bind-key "<f12>" 'yankpad-expand))
+    (bind-key "<f12>" 'yankpad-expand)
+    ;; If you want to complete snippets using company-mode
+    (add-to-list 'company-backends #'company-yankpad))
 #+END_SRC
 
 * Usage
 
 1. Add snippet entries to your =yankpad-file=. Level 1 headings are categories and level 2 headings are snippets (by default).
-2. Insert a snippet with =M-x yankpad-insert=. If the snippet has a keyword (it starts with a word followed by a colon), you can write that keyword into the buffer and use =M-x yankpad-expand= instead. It may be useful to bind these commands to some key on your keyboard.
+2. Insert a snippet with =M-x yankpad-insert=. If the snippet has a keyword (it starts with a word followed by a colon), you can write that keyword into the buffer and use =M-x yankpad-expand= instead. It may be useful to bind these commands to some key on your keyboard. You can also use =company-yankpad= to expand a snippet using =company-mode= (thanks [[https://github.com/sid-kurias][sid-kurias]] for contributing).
 3. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode. In the same manner you can name a category to one of your Projectile project names (if Projectile is installed). If both cases are true, the Projectile category becomes active, but the snippets from the major mode are appended as well. If you later change category with =M-x yankpad-set-category=, the major-mode and project snippets will be appended to the chosen category.
 4. If you want to append snippets from another of your categories (basically like having two or more categories active at the same time), use =M-x yankpad-append-category=. If you want one of your categories to /always/ include snippets from another category; set the =INCLUDE= [[http://orgmode.org/manual/Property-syntax.html#Property-syntax][property]] of the category heading (several categories can be included this way, by separating them with =|=, see example at the top of this readme).
 5. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.
@@ -139,7 +142,7 @@ Snippets in your Yankpad can have tags, and some of these have special meanings:
 - =indent_fixed= :: Sets =yas-indent-line= to =fixed= for this snippet.
 - =<key>= :: The last tag of a snippet (except if its one of the above) will add the tag as a keybinding when first calling =yankpad-map=. If the last tag is =o=, then using =M-x yankpad-map o= will insert that snippet. This is most useful if you bind =yankpad-map= to a key.
 * Changelog
-
+- 1.60 (January 2017) :: =company-yankpad= (requires [[http://company-mode.github.io/][company-mode]]) was contributed by [[https://github.com/sid-kurias][sid-kurias]]. You can now use company to complete snippet names!
 - 1.51 (January 2017) :: Added =yankpad-reload=.
 - 1.50 (September 2016) :: It is now possible to have active snippets from several categories at once, by using =M-x yankpad-append-category= or by modifying the yankpad file. This is done automatically for major mode and projectile categories.
 - 1.40 (August 2016) :: Added =results= tag. Works as =func= tag, but the output of the function is inserted into the buffer.
