@@ -5,7 +5,7 @@
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 1.6
+;; Version: 1.70
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ()
 
@@ -16,6 +16,11 @@
 ;; `org-directory' by default.  In this file, each heading specifies a snippet
 ;; category and each subheading of that category defines a snippet.  This way
 ;; you can have different yankpads for different occasions.
+;;
+;; You can open your `yankpad-file' by using `yankpad-edit' (or just open it in
+;; any other way).  Another way to add new snippets is by using
+;; `yankpad-capture-snippet', which will add a snippet to the current
+;; `yankpad-category'.
 ;;
 ;; If you have yasnippet installed, yankpad will try to use it when pasting
 ;; snippets.  This means that you can use the features that yasnippet provides
@@ -101,6 +106,7 @@
 ;;; Code:
 
 (require 'org-element)
+(require 'org-capture)
 (require 'thingatpt)
 (when (version< (org-version) "8.3")
   (require 'ox))
@@ -129,6 +135,9 @@
 
 (defvar yankpad--active-snippets nil
   "A cached version of the snippets in the current category.")
+
+(defvar yankpad--last-snippet nil
+  "The last snippet executed. Used by `yankpad-repeat'.")
 
 (defun yankpad-active-snippets ()
   "Get the snippets in the current category."
@@ -231,6 +240,7 @@ Return the result of the function output as a string."
 
 (defun yankpad--run-snippet (snippet)
   "Triggers the SNIPPET behaviour."
+  (setq yankpad--last-snippet snippet)
   (let ((name (car snippet))
         (tags (cadr snippet))
         (content (cddr snippet)))
@@ -261,6 +271,35 @@ Return the result of the function output as a string."
               "^\\\\[*]" (make-string prepend-asterisks ?*) (car content))
              indent))
         (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))
+
+(defun yankpad-repeat ()
+  "Repeats the last used snippet."
+  (interactive)
+  (if yankpad--last-snippet
+      (yankpad--run-snippet yankpad--last-snippet)
+    (error "There has been no previous snippet")))
+
+(defun yankpad--remove-id-from-yankpad-capture ()
+  "Remove ID property from last `yankpad-capture-snippet', save `yankpad-file'."
+  (let* ((properties (org-entry-properties org-capture-last-stored-marker))
+         (file (cdr (assoc "FILE" properties))))
+    (when (equal file yankpad-file)
+      (when (org-entry-delete org-capture-last-stored-marker "ID")
+        (with-current-buffer (get-file-buffer file)
+          (save-buffer))))))
+(add-hook 'org-capture-after-finalize-hook #'yankpad--remove-id-from-yankpad-capture)
+
+;;;###autoload
+(defun yankpad-capture-snippet ()
+  "`org-capture' a snippet to current `yankpad-category' (prompts if not set)."
+  (interactive)
+  (unless yankpad-category
+    (yankpad-set-category))
+  (let ((org-capture-entry
+         `("y" "Yankpad" entry (file+headline ,yankpad-file ,yankpad-category)
+           "* %?\n%i")))
+    (org-capture))
+  (yankpad-reload))
 
 (defun yankpad-insert-from-current-category (&optional name)
   "Insert snippet NAME from `yankpad-category'.  Prompts for NAME unless set.
