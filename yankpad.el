@@ -7,7 +7,7 @@
 ;; URL: http://github.com/Kungsgeten/yankpad
 ;; Version: 1.70
 ;; Keywords: abbrev convenience
-;; Package-Requires: ()
+;; Package-Requires: ((emacs "24"))
 
 ;;; Commentary:
 
@@ -143,6 +143,7 @@
   "Get the snippets in the current category."
   (or yankpad--active-snippets (yankpad-set-active-snippets)))
 
+;;;###autoload
 (defun yankpad-set-category ()
   "Change the yankpad category."
   (interactive)
@@ -313,6 +314,7 @@ Does not change `yankpad-category'."
         (message (concat "No snippet named " name))
         nil))))
 
+;;;###autoload
 (defun yankpad-expand ()
   "Replace word at point with a snippet.
 Only works if the word is found in the first matching group of `yankpad-expand-keyword-regex'."
@@ -331,6 +333,7 @@ Only works if the word is found in the first matching group of `yankpad-expand-k
          (yankpad-active-snippets))
         nil))))
 
+;;;###autoload
 (defun yankpad-edit ()
   "Open the yankpad file for editing."
   (interactive)
@@ -397,6 +400,7 @@ The car is the snippet name and the cdr is a cons (tags snippet-string)."
                   (yankpad--snippet-elements category-name))))
     (append snippets (cl-reduce #'append (mapcar #'yankpad--snippets include)))))
 
+;;;###autoload
 (defun yankpad-map ()
   "Create and execute a keymap out of the last tags of snippets in `yankpad-category'."
   (interactive)
