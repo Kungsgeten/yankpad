@@ -319,6 +319,8 @@ Does not change `yankpad-category'."
   "Replace word at point with a snippet.
 Only works if the word is found in the first matching group of `yankpad-expand-keyword-regex'."
   (interactive)
+  (unless yankpad-category
+    (yankpad-set-category))
   (let* ((word (word-at-point))
          (bounds (bounds-of-thing-at-point 'word))
          (snippet-prefix (concat word yankpad-expand-separator)))
