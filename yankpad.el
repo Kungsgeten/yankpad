@@ -432,6 +432,8 @@ If successful, make `yankpad-category' buffer-local."
       (when category (yankpad-set-local-category category)))))
 
 (add-hook 'after-change-major-mode-hook #'yankpad-local-category-to-major-mode)
+;; Run the function when yankpad is loaded
+(yankpad-local-category-to-major-mode)
 
 (defun yankpad-local-category-to-projectile ()
   "Try to change `yankpad-category' to match the `projectile-project-name'.
@@ -444,6 +446,8 @@ If successful, make `yankpad-category' buffer-local."
 
 (eval-after-load "projectile"
   (add-hook 'projectile-find-file-hook #'yankpad-local-category-to-projectile))
+;; Run the function when yankpad is loaded
+(yankpad-local-category-to-projectile)
 
 ;; `company-yankpad--name-or-key' and `company-yankpad' are Copyright (C) 2017
 ;; Sidart Kurias (https://github.com/sid-kurias/) and are included by permission
