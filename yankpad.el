@@ -316,15 +316,15 @@ Does not change `yankpad-category'."
 
 ;;;###autoload
 (defun yankpad-expand ()
-  "Replace word at point with a snippet.
-Only works if the word is found in the first matching group of `yankpad-expand-keyword-regex'."
+  "Replace symbol at point with a snippet.
+Only works if the symbol is found in the first matching group of `yankpad-expand-keyword-regex'."
   (interactive)
   (unless yankpad-category
     (yankpad-set-category))
-  (let* ((word (word-at-point))
-         (bounds (bounds-of-thing-at-point 'word))
-         (snippet-prefix (concat word yankpad-expand-separator)))
-    (when (and word yankpad-category)
+  (let* ((symbol (symbol-at-point))
+         (bounds (bounds-of-thing-at-point 'symbol))
+         (snippet-prefix (concat symbol yankpad-expand-separator)))
+    (when (and symbol yankpad-category)
       (catch 'loop
         (mapc
          (lambda (snippet)
