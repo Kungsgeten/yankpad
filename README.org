@@ -109,7 +109,9 @@ Here's an example setup using the excellent [[https://github.com/jwiegley/use-pa
     (bind-key "<f7>" 'yankpad-map)
     (bind-key "<f12>" 'yankpad-expand)
     ;; If you want to complete snippets using company-mode
-    (add-to-list 'company-backends #'company-yankpad))
+    (add-to-list 'company-backends #'company-yankpad)
+    ;; If you want to expand snippets with hippie-expand
+    (add-to-list 'hippie-expand-try-functions-list #'yankpad-expand))
 #+END_SRC
 
 * Usage
