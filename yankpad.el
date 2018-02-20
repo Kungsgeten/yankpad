@@ -1,11 +1,11 @@
-;;; yankpad.el --- Paste snippets from an org-mode file
+;;; yankpad.el --- Paste snippets from an org-mode file         -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016 Erik Sjöstrand
+;; Copyright (C) 2016--2018 Erik Sjöstrand
 ;; MIT License, except company-yankpad and company-yankpad--name-or-key (GPL 3)
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 1.70
+;; Version: 1.80
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ((emacs "24"))
 
@@ -211,7 +211,6 @@ Uses `yankpad-category', and prompts for it if it isn't set."
 (defun yankpad--insert-snippet-text (text indent)
   "Insert TEXT into buffer.  INDENT is whether/how to indent the snippet.
 Use yasnippet and `yas-indent-line' if available."
-  (setq text (substring-no-properties text 0 -1))
   (if (and (require 'yasnippet nil t)
            yas-minor-mode)
       (if (region-active-p)
@@ -243,15 +242,23 @@ Return the result of the function output as a string."
   "Triggers the SNIPPET behaviour."
   (setq yankpad--last-snippet snippet)
   (let ((name (car snippet))
-        (tags (cadr snippet))
-        (content (cddr snippet)))
+        (tags (nth 1 snippet))
+        (src-blocks (nth 2 snippet))
+        (content (nth 3 snippet)))
     (cond
+     (src-blocks
+      (yankpad--run-snippet
+       (list name nil nil
+             (mapconcat
+              (lambda (x)
+                (org-remove-indentation (org-element-property :value x)))
+              src-blocks ""))))
      ((member "func" tags)
       (yankpad--trigger-snippet-function name content))
      ((member "results" tags)
       (insert (yankpad--trigger-snippet-function name content)))
      (t
-      (if (car content)
+      (if (> (length content) 0)
           ;; Respect the tree level when yanking org-mode headings.
           (let ((prepend-asterisks 1)
                 (indent (cond ((member "indent_nil" tags)
@@ -269,7 +276,7 @@ Return the result of the function output as a string."
               (setq prepend-asterisks (org-current-level)))
             (yankpad--insert-snippet-text
              (replace-regexp-in-string
-              "^\\\\[*]" (make-string prepend-asterisks ?*) (car content))
+              "^\\\\[*]" (make-string prepend-asterisks ?*) content)
              indent))
         (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))
 
@@ -392,16 +399,22 @@ This function can be added to `hippie-expand-try-functions-list'."
 
 (defun yankpad--snippets (category-name)
   "Get an alist of the snippets in CATEGORY-NAME.
-The car is the snippet name and the cdr is a cons (tags snippet-string)."
+Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
   (let* ((propertystring (yankpad--category-include-property category-name))
          (include (when propertystring
                     (split-string propertystring "|")))
          (snippets
           (mapcar (lambda (h)
-                    (let ((heading (org-element-property :raw-value h))
-                          (text (org-element-map h 'section #'org-element-interpret-data))
-                          (tags (org-element-property :tags h)))
-                      (cons heading (cons tags text))))
+                    (let* ((heading (org-element-property :raw-value h))
+                           (pos (org-element-property :contents-begin h))
+                           (text (with-temp-buffer
+                                   (insert-file-contents yankpad-file)
+                                   (goto-char pos)
+                                   (org-remove-indentation (org-get-entry))))
+                           (tags (org-element-property :tags h))
+                           (src-blocks (when (member "src" tags)
+                                         (org-element-map h 'src-block (lambda (x) x)))))
+                      (list heading tags src-blocks text)))
                   (yankpad--snippet-elements category-name))))
     (append snippets (cl-reduce #'append (mapcar #'yankpad--snippets include)))))
 
@@ -411,20 +424,14 @@ The car is the snippet name and the cdr is a cons (tags snippet-string)."
   (interactive)
   (define-prefix-command 'yankpad-keymap)
   (mapc (lambda (snippet)
-          (let ((last-tag (car (last (cadr snippet)))))
+          (let ((last-tag (car (last (nth 1 snippet)))))
             (when (and last-tag
-                       (not (eq last-tag "func"))
-                       (not (eq last-tag "results"))
-                       (not (string-prefix-p "indent_" last-tag)))
-              (let ((heading (car snippet))
-                    (content (cddr snippet))
-                    (tags (cadr  snippet)))
-                (define-key yankpad-keymap (kbd (substring-no-properties last-tag))
-                  `(lambda ()
-                     (interactive)
-                     (yankpad--run-snippet (cons ,heading
-                                                 (cons (list ,@tags)
-                                                       (list ,@content))))))))))
+                       (not (string-prefix-p "indent_" last-tag))
+                       (not (member last-tag '("func" "results" "src"))))
+              (define-key yankpad-keymap (kbd (substring-no-properties last-tag))
+                `(lambda ()
+                   (interactive)
+                   (yankpad--run-snippet ',snippet))))))
         (yankpad-active-snippets))
   (set-transient-map 'yankpad-keymap))
 
