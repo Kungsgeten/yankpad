@@ -423,17 +423,29 @@ Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
   "Create and execute a keymap out of the last tags of snippets in `yankpad-category'."
   (interactive)
   (define-prefix-command 'yankpad-keymap)
+  (setq yankpad-map-help nil)
   (mapc (lambda (snippet)
           (let ((last-tag (car (last (nth 1 snippet)))))
             (when (and last-tag
                        (not (string-prefix-p "indent_" last-tag))
                        (not (member last-tag '("func" "results" "src"))))
+              (let ((heading (car snippet))
+                    (key (substring-no-properties last-tag)))
+                (push (cons key (format "[%s] %s " key heading)) yankpad-map-help))
               (define-key yankpad-keymap (kbd (substring-no-properties last-tag))
                 `(lambda ()
                    (interactive)
                    (yankpad--run-snippet ',snippet))))))
         (yankpad-active-snippets))
+  (message "yankpad: %s"
+           (if yankpad-map-help
+               (apply 'concat (mapcar 'cdr (sort yankpad-map-help
+                                                 (lambda (x y)
+                                                   (string-lessp (car x) (car y))))))
+             (format "nothing is defined" yankpad-category)))
   (set-transient-map 'yankpad-keymap))
+
+(defvar yankpad-map-help nil "Alist of key and title used in `yankpad-map'.")
 
 (defun yankpad-local-category-to-major-mode ()
   "Try to change `yankpad-category' to match the buffer's major mode.
