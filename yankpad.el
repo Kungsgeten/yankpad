@@ -442,7 +442,7 @@ Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
                (apply 'concat (mapcar 'cdr (sort yankpad-map-help
                                                  (lambda (x y)
                                                    (string-lessp (car x) (car y))))))
-             (format "nothing is defined" yankpad-category)))
+             (format "nothing is defined in %s" yankpad-category)))
   (set-transient-map 'yankpad-keymap))
 
 (defvar yankpad-map-help nil "Alist of key and title used in `yankpad-map'.")
