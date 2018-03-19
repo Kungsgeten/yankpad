@@ -445,6 +445,14 @@ Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
                (format "nothing is defined in %s" yankpad-category))))
   (set-transient-map 'yankpad-keymap))
 
+(defmacro yankpad-map-simulate (key)
+  "Create and return a command which presses KEY in `yankpad-map'."
+  `(defun ,(intern (concat "yankpad-map-press-" key)) ()
+     ,(concat "Press '" key "' in `yankpad-map'.")
+     (interactive)
+     (setq unread-command-events (listify-key-sequence (kbd ,key)))
+     (yankpad-map)))
+
 (defun yankpad-local-category-to-major-mode ()
   "Try to change `yankpad-category' to match the buffer's major mode.
 If successful, make `yankpad-category' buffer-local."
