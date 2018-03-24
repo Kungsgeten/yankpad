@@ -489,6 +489,20 @@ If successful, make `yankpad-category' buffer-local."
 ;; Run the function when yankpad is loaded
 (yankpad-local-category-to-projectile)
 
+(with-eval-after-load "auto-yasnippet"
+  (defun yankpad-aya-persist (name)
+    "Add `aya-current' as NAME to `yankpad-category'."
+    (interactive
+     (if (eq aya-current "")
+         (user-error "Aborting: You don't have a current auto-snippet defined")
+       (list (read-string "Snippet name: "))))
+    (unless yankpad-category (yankpad-set-category))
+    (let ((org-capture-entry
+           `("y" "Yankpad" entry (file+headline ,yankpad-file ,yankpad-category)
+             ,(format "* %s\n%s\n" name aya-current)
+             :immediate-finish t)))
+      (org-capture))))
+
 ;; `company-yankpad--name-or-key' and `company-yankpad' are Copyright (C) 2017
 ;; Sidart Kurias (https://github.com/sid-kurias/) and are included by permission
 ;; from the author. They're licensed under GNU GPL 3 (http://www.gnu.org/licenses/).
