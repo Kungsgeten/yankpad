@@ -208,13 +208,16 @@ Uses `yankpad-category', and prompts for it if it isn't set."
         (yankpad-set-category)))
   (yankpad-insert-from-current-category))
 
-(defun yankpad--insert-snippet-text (text indent)
+(defun yankpad--insert-snippet-text (text indent wrap)
   "Insert TEXT into buffer.  INDENT is whether/how to indent the snippet.
+WRAP is the value for `yas-wrap-around-region', if `yasnippet' is available.
 Use yasnippet and `yas-indent-line' if available."
   (if (and (require 'yasnippet nil t)
            yas-minor-mode)
       (if (region-active-p)
-          (yas-expand-snippet text (region-beginning) (region-end) `((yas-indent-line (quote ,indent))))
+          (yas-expand-snippet text (region-beginning) (region-end)
+                              `((yas-indent-line (quote ,indent))
+                                (yas-wrap-around-region (quote ,wrap))))
         (yas-expand-snippet text nil nil `((yas-indent-line (quote ,indent)))))
     (let ((start (point)))
       (insert text)
@@ -269,7 +272,13 @@ Return the result of the function output as a string."
                                'auto)
                               ((and (require 'yasnippet nil t) yas-minor-mode)
                                yas-indent-line)
-                              (t t))))
+                              (t t)))
+                (wrap (cond ((or (not (and (require 'yasnippet nil t) yas-minor-mode))
+                                 (member "wrap_nil" tags))
+                             nil)
+                            ((member "wrap" tags)
+                             t)
+                            (t yas-wrap-around-region))))
             (when (and yankpad-respect-current-org-level
                        (equal major-mode 'org-mode)
                        (org-current-level))
@@ -277,7 +286,7 @@ Return the result of the function output as a string."
             (yankpad--insert-snippet-text
              (replace-regexp-in-string
               "^\\\\[*]" (make-string prepend-asterisks ?*) content)
-             indent))
+             indent wrap))
         (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))
 
 (defun yankpad-repeat ()
@@ -428,6 +437,7 @@ Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
             (let ((last-tag (car (last (nth 1 snippet)))))
               (when (and last-tag
                          (not (string-prefix-p "indent_" last-tag))
+                         (not (string-prefix-p "wrap" last-tag))
                          (not (member last-tag '("func" "results" "src"))))
                 (let ((heading (car snippet))
                       (key (substring-no-properties last-tag)))

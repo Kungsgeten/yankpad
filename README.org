@@ -166,9 +166,11 @@ Snippets in your Yankpad can have tags, and some of these have special meanings:
 - =indent_nil= :: By default the inserted text will be indented (uses =indent_region= or the settings of =yas-indent-line= if =yas-minor-mode= is active). By using =indent_nil=, no indentation will occur.
 - =indent_auto= :: Sets =yas-indent-line= to =auto= for this snippet.
 - =indent_fixed= :: Sets =yas-indent-line= to =fixed= for this snippet.
+- =wrap= :: Sets =yas-wrap-around-region= to =t= for this snippet.
+- =wrap_nil= :: Sets =yas-wrap-around-region= to =nil= for this snippet.
 - =<key>= :: The last tag of a snippet (except if its one of the above) will add the tag as a keybinding when first calling =yankpad-map=. If the last tag is =o=, then using =M-x yankpad-map o= will insert that snippet. This is most useful if you bind =yankpad-map= to a key. You can also have multiple letters in the tag, which will be treated as key sequences: if the last tag is =yy= then =M-x yankpad-map y y= will trigger it.
 * Changelog
-- 1.90 (March 2018) :: Added =yankpad-map-simulate=. =yankpad-map= has a helper text (thanks [[https://github.com/akirak][akirak]]).
+- 1.90 (March 2018) :: Added =yankpad-map-simulate=. =yankpad-map= has a helper text (thanks [[https://github.com/akirak][akirak]]). =wrap= tags has been added.
 - 1.80 (February 2018) :: Snippets can be configured to concatenate the [[https://orgmode.org/guide/Working-With-Source-Code.html][source blocks]] in the snippet. This is done by adding the =src= tag to the snippet.
 - 1.70 (February 2017) :: =yankpad-repeat= and =yankpad-capture-snippet= added.
 - 1.60 (January 2017) :: =company-yankpad= (requires [[https://company-mode.github.io/][company-mode]]) was contributed by [[https://github.com/sid-kurias][sid-kurias]]. You can now use company to complete snippet names!
