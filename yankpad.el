@@ -228,11 +228,11 @@ Use yasnippet and `yas-indent-line' if available."
   "SNIPPETNAME can be an elisp function, without arguments, if CONTENT is nil.
 If non-nil, CONTENT should hold a single `org-mode' src-block, to be executed.
 Return the result of the function output as a string."
-  (if (car content)
+  (if (> (length content) 0)
       (with-temp-buffer
         (delay-mode-hooks
           (org-mode)
-          (insert (car content))
+          (insert content)
           (goto-char (point-min))
           (if (org-in-src-block-p)
               (prin1-to-string (org-babel-execute-src-block))
