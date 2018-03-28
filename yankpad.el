@@ -232,7 +232,7 @@ Prompts for CATEGORY if it isn't provided."
   "Load abbrevs related to `yankpad-category'."
   (let ((major-abbrev-table (intern-soft (concat (symbol-name major-mode) "-abbrev-table"))))
     (if major-abbrev-table
-        (setq local-abbrev-table (copy-abbrev-table major-abbrev-table))
+        (setq local-abbrev-table (copy-abbrev-table (eval major-abbrev-table)))
       (clear-abbrev-table local-abbrev-table)))
   (yankpad--add-abbrevs-from-category yankpad-category)
   (mapc #'yankpad--add-abbrevs-from-category (yankpad--global-categories))
