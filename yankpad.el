@@ -118,6 +118,9 @@
 ;;    This category will include snippets from Category 1 and Category 2.
 ;;    This is done by setting the INCLUDE property of the category.
 ;;
+;; * Global category       :global:
+;; ** Always available
+;;    Snippets in a category with the :global: tag are always available for expansion.
 ;;; Code:
 
 (require 'org-element)
@@ -165,6 +168,9 @@ of the description will be treated as a keyword in `yankpad'.
 
 If 'abbrev, the items will overwrite `local-abbrev-table'.")
 
+(defvar yankpad-global-tag "global"
+  "Snippets in a category with this tag are always active.")
+
 (defun yankpad-active-snippets ()
   "Get the snippets in the current category."
   (or yankpad--active-snippets (yankpad-set-active-snippets)))
@@ -191,15 +197,17 @@ Also append major mode and/or projectile categories if `yankpad-category' is loc
       (progn
         (setq yankpad--active-snippets (yankpad--snippets yankpad-category))
         (when (local-variable-p 'yankpad-category)
-          (let ((major-mode-category (car (member (symbol-name major-mode)
-                                                  (yankpad--categories)))))
-            (when major-mode-category
-              (yankpad-append-category major-mode-category)))
-          (when (require 'projectile nil t)
-            (let ((projectile-category (car (member (projectile-project-name)
-                                                    (yankpad--categories)))))
-              (when projectile-category
-                (yankpad-append-category projectile-category)))))
+          (let ((categories (yankpad--categories)))
+            (let ((major-mode-category (car (member (symbol-name major-mode)
+                                                    categories))))
+              (when major-mode-category
+                (yankpad-append-category major-mode-category)))
+            (when (require 'projectile nil t)
+              (let ((projectile-category (car (member (projectile-project-name)
+                                                      categories))))
+                (when projectile-category
+                  (yankpad-append-category projectile-category))))))
+        (mapc #'yankpad-append-category (yankpad--global-categories))
         yankpad--active-snippets)
     (yankpad-set-category)
     (yankpad-set-active-snippets)))
@@ -213,14 +221,32 @@ Prompts for CATEGORY if it isn't provided."
   (unless (equal category yankpad-category)
     (unless yankpad--active-snippets (yankpad-set-active-snippets))
     (setq yankpad--active-snippets
-          (append yankpad--active-snippets (yankpad--snippets category)))
-    (when (eq yankpad-descriptive-list-treatment 'abbrev)
-      (yankpad-add-abbrevs-from-category category))))
+          (append yankpad--active-snippets (yankpad--snippets category)))))
 
-(defun yankpad-add-abbrevs-from-category (category)
+(defun yankpad--add-abbrevs-from-category (category)
   "`define-abbrev' in `local-abbrev-table' for each descriptive list item in CATEGORY."
-  (dolist (abbrev (yankpad-category-descriptions yankpad-category))
+  (dolist (abbrev (yankpad-category-descriptions category))
     (define-abbrev local-abbrev-table (car abbrev) (cdr abbrev))))
+
+(defun yankpad-load-abbrevs ()
+  "Load abbrevs related to `yankpad-category'."
+  (let ((major-abbrev-table (intern-soft (concat (symbol-name major-mode) "-abbrev-table"))))
+    (if major-abbrev-table
+        (setq local-abbrev-table (copy-abbrev-table major-abbrev-table))
+      (clear-abbrev-table local-abbrev-table)))
+  (yankpad--add-abbrevs-from-category yankpad-category)
+  (mapc #'yankpad--add-abbrevs-from-category (yankpad--global-categories))
+  (when (local-variable-p 'yankpad-category)
+    (let ((categories (yankpad--categories)))
+      (let ((major-mode-category (car (member (symbol-name major-mode)
+                                              categories))))
+        (when major-mode-category
+          (yankpad--add-abbrevs-from-category major-mode-category)))
+      (when (require 'projectile nil t)
+        (let ((projectile-category (car (member (projectile-project-name)
+                                                categories))))
+          (when projectile-category
+            (yankpad--add-abbrevs-from-category projectile-category)))))))
 
 (defun yankpad-reload ()
   "Clear the snippet cache.
@@ -233,11 +259,7 @@ If `yankpad-descriptive-list-treatment' is 'abbrev,
   (setq yankpad--active-snippets nil)
   (when (and (eq yankpad-descriptive-list-treatment 'abbrev)
              yankpad-category)
-    (let ((major-abbrev-table (intern-soft (concat (symbol-name major-mode) "-abbrev-table"))))
-      (if major-abbrev-table
-          (setq local-abbrev-table (copy-abbrev-table major-abbrev-table))
-        (clear-abbrev-table local-abbrev-table)))
-    (yankpad-add-abbrevs-from-category yankpad-category)))
+    (yankpad-load-abbrevs)))
 
 (add-hook 'yankpad-switched-category-hook #'yankpad-reload)
 
@@ -419,6 +441,15 @@ This function can be added to `hippie-expand-try-functions-list'."
         (when (equal (org-element-property :level h)
                      yankpad-category-heading-level)
           (org-element-property :raw-value h))))))
+
+(defun yankpad--global-categories ()
+  "Get the yankpad categories with `yankpad-global-tag' as a list."
+  (org-element-map (yankpad--file-elements) 'headline
+    (lambda (h)
+      (when (and (equal (org-element-property :level h)
+                        yankpad-category-heading-level)
+                 (member yankpad-global-tag (org-element-property :tags h)))
+        (org-element-property :raw-value h)))))
 
 (defun yankpad--snippet-elements (category-name)
   "Get all the snippet `org-mode' heading elements in CATEGORY-NAME."
