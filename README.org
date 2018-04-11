@@ -43,9 +43,9 @@ the yankpad:
 
   ,** yasnippet magic
 
-      If you have yasnippet installed (not a requirement), the content in each snippet
-      is actually executed by yasnippet! This means that you could run elisp
-      inside your snippets: `(+ 3 4)` and have handy tab stop fields.
+      If you have yasnippet installed (not a requirement), the content in each
+      snippet is actually executed by yasnippet! This means that you could run
+      elisp inside your snippets: `(+ 3 4)` and have handy tab stop fields.
 
       | Student | Grade |
       |---------+-------|
@@ -54,28 +54,48 @@ the yankpad:
       That's pretty handy!
       $0
 
-  ,** "Litterate programming" snippet                     :src:
+  ,** [[file:my_other_snippets.org]]
 
-      Tagging a snippet with src says that only the content of source blocks
-      should be expanded. All other text (like this paragraph) is ignored.
+     If a heading has a link to another org-file, that file will be scanned for
+     snippets. Those snippets are then appended to the category.
 
-      ,#+BEGIN_SRC emacs-lisp
-      (message "This is part of the snippet")
-      ,#+END_SRC
+  ,** [[file:misc_snippets::*Search]]
 
-      If you have several source blocks, their content will be concatenated.
+     You can specify a specific headline in another file, which you want to be
+     searched for snippets. It could be a single snippet, or it could have
+     subtrees (in which case all of them will be considered as snippets).
 
-      ,#+BEGIN_SRC emacs-lisp
-      (message "This is also part of the snippet!!!")
-      ,#+END_SRC
+  ,** [[id:38e4c8d2-5ab0-4e78-8e43-ea4a918e5c02]]
 
-  ,** The source block below will be executed if tag is func :func:
-      ,#+BEGIN_SRC emacs-lisp
-      ;; Instead of a src-block, the snippet may be named
-      ;; the same as an emacs-lisp function. This will then
-      ;; be executed without arguments (see next example).
-      (elfeed)
-      ,#+END_SRC
+     You can also provide the ID of a specific org-mode headline.
+
+  ,** Code snippet examples
+
+      You can organize your snippets inside a category by using subtrees, like
+      this one. Only headings without children are considered as snippets.
+
+  ,*** "Litterate programming" snippet                    :src:
+
+       Tagging a snippet with src says that only the content of source blocks
+       should be expanded. All other text (like this paragraph) is ignored.
+
+       ,#+BEGIN_SRC emacs-lisp
+       (message "This is part of the snippet")
+       ,#+END_SRC
+
+       If you have several source blocks, their content will be concatenated.
+
+       ,#+BEGIN_SRC emacs-lisp
+       (message "This is also part of the snippet!!!")
+       ,#+END_SRC
+
+  ,*** The source block below will be executed if tag is func :func:
+       ,#+BEGIN_SRC emacs-lisp
+       ;; Instead of a src-block, the snippet may be named
+       ;; the same as an emacs-lisp function. This will then
+       ;; be executed without arguments (see next example).
+       (elfeed)
+       ,#+END_SRC
 
   ,** elfeed                                            :func:e:
 
@@ -121,7 +141,7 @@ the yankpad:
 4. Optionally install =yasnippet= and/or =projectile= and/or =company-mode=, if you want the additional yankpad features that those package provide.
 5. That's it!
 
-If you want different heading levels for the categories (default 1) or snippets (default 2), change the value of =yankpad-category-heading-level= and/or =yankpad-snippet-heading-level=. You can also change the tag which defines categories as global, by modifying =yankpad-global-tag=.
+If you want different heading levels for the categories (default 1), change the value of =yankpad-category-heading-level=. You can also change the tag which defines categories as global, by modifying =yankpad-global-tag=.
 
 By default keywords are defined by a word at the start of a snippet title, followed by a colon (=:=). You can change =:= into another string by changing the =yankpad-expand-separator= variable.
 
@@ -144,7 +164,7 @@ Here's an example setup using the excellent [[https://github.com/jwiegley/use-pa
 
 * Usage
 
-1. Add snippet entries to your =yankpad-file=. Level 1 headings are categories and level 2 headings are snippets (by default). Also descriptive lists at the category level are treated as snippets by default. A quick way to open your =yankpad-file= is to use =M-x yankpad-edit=. You can also add snippets to the current =yankpad-category= by using =M-x yankpad-capture=, or with =M-x yankpad-aya-persist= if you're a [[https://github.com/abo-abo/auto-yasnippet][auto-yasnippet]] user.
+1. Add snippet entries to your =yankpad-file=. Level 1 headings are considered to be categories (by default). Also descriptive lists at the category level are treated as snippets by default. A quick way to open your =yankpad-file= is to use =M-x yankpad-edit=. You can also add snippets to the current =yankpad-category= by using =M-x yankpad-capture=, or with =M-x yankpad-aya-persist= if you're a [[https://github.com/abo-abo/auto-yasnippet][auto-yasnippet]] user.
 2. Insert a snippet with =M-x yankpad-insert=. If the snippet has a keyword (it starts with a word followed by a colon), you can write that keyword into the buffer and use =M-x yankpad-expand= instead. It may be useful to bind these commands to some key on your keyboard. You can also use =company-yankpad= to expand a snippet using =company-mode= (thanks [[https://github.com/sid-kurias][sid-kurias]] for contributing). If you want to insert the last snippet again, you can use =M-x yankpad-repeat= (bind that to a key if you're using it frequently).
 3. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode. In the same manner you can name a category to one of your Projectile project names (if Projectile is installed). If both cases are true, the Projectile category becomes active, but the snippets from the major mode are appended as well. If you later change category with =M-x yankpad-set-category=, the major-mode and project snippets will be appended to the chosen category.
 4. If you want to append snippets from another of your categories (basically like having two or more categories active at the same time), use =M-x yankpad-append-category=. If you want one of your categories to /always/ include snippets from another category; set the =INCLUDE= [[https://orgmode.org/manual/Property-syntax.html#Property-syntax][property]] of the category heading (several categories can be included this way, by separating them with =|=, see example at the top of this readme).
@@ -187,6 +207,8 @@ Snippets in your Yankpad can have tags, and some of these have special meanings:
 If you set =yankpad-descriptive-list-treatment= to ='abbrev=, descriptive lists inside =yankpad= categories will be handled by =abbrev-mode= instead of being considered as snippets.
 
 * Changelog
+
+- 2.10 (April 2018) :: Snippets can be spread between files, by using links in snippet headlines. Only headlines without subtrees are considered to be snippets, which means you can organize your snippets in different subtrees. =yankpad-snippet-heading-level= is removed, since it isn't needed anymore.
 - 2.00 (March 2018) :: Snippets, with keywords, may now be defined in descriptive lists. These lists could instead be treated by =abbrev-mode=. A category can be tagged as =:global:= in order to include its snippets in all categories.
 - 1.90 (March 2018) :: Added =yankpad-map-simulate=. =yankpad-map= has a helper text (thanks [[https://github.com/akirak][akirak]]). =wrap= tags has been added. =yankpad-aya-persist= for [[https://github.com/abo-abo/auto-yasnippet][auto-yasnippet]] added.
 - 1.80 (February 2018) :: Snippets can be configured to concatenate the [[https://orgmode.org/guide/Working-With-Source-Code.html][source blocks]] in the snippet. This is done by adding the =src= tag to the snippet.

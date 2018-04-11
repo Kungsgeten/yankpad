@@ -5,7 +5,7 @@
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 2.00
+;; Version: 2.10
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ((emacs "24"))
 
@@ -139,9 +139,6 @@
 
 (defvar yankpad-category-heading-level 1
   "The `org-mode' heading level of categories in the `yankpad-file'.")
-
-(defvar yankpad-snippet-heading-level 2
-  "The `org-mode' heading level of snippets in the `yankpad-file'.")
 
 (defvar yankpad-respect-current-org-level t
   "Whether to respect `org-current-level' when using \* in snippets and yanking them into `org-mode' buffers.")
@@ -451,34 +448,68 @@ This function can be added to `hippie-expand-try-functions-list'."
                  (member yankpad-global-tag (org-element-property :tags h)))
         (org-element-property :raw-value h)))))
 
-(defun yankpad--snippet-elements (category-name)
-  "Get all the snippet `org-mode' heading elements in CATEGORY-NAME."
-  (let ((data (yankpad--file-elements))
-        (lineage-func (if (version< (org-version) "8.3")
-                          #'org-export-get-genealogy
-                        #'org-element-lineage)))
-    (org-element-map data 'headline
-      (lambda (h)
-        (let ((lineage (funcall lineage-func h)))
-          (when (and (equal (org-element-property :level h)
-                            yankpad-snippet-heading-level)
-                     (member category-name
-                             (mapcar (lambda (x)
-                                       (org-element-property :raw-value x))
-                                     lineage)))
-            h))))))
+(defun yankpad-category-marker (category)
+  "Get marker to CATEGORY in `yankpad-file'."
+  (org-element-map (yankpad--file-elements) 'headline
+    (lambda (h)
+      (when (and (equal (org-element-property :level h)
+                        yankpad-category-heading-level)
+                 (string-equal (org-element-property :raw-value h) category))
+        (set-marker (make-marker)
+                    (org-element-property :begin h)
+                    (find-file-noselect yankpad-file))))
+    nil t))
 
 (defun yankpad--category-include-property (category-name)
   "Get the \"INCLUDE\" property from CATEGORY-NAME."
-  (let ((data (yankpad--file-elements)))
-    (org-element-map data 'headline
-      (lambda (h)
-        (when (and (equal (org-element-property :level h)
-                          yankpad-category-heading-level)
-                   (equal (org-element-property :raw-value h)
-                          category-name))
-          (org-element-property :INCLUDE h)))
-      nil t)))
+  (org-entry-get (yankpad-category-marker category-name) "INCLUDE"))
+
+(defun yankpad-snippets-from-link (link)
+  "Get snippets from LINK."
+  (string-match "\\(^[[:alpha:]]+\\):\\(.+\\)" link)
+  (let* ((type (match-string 1 link))
+         (value (match-string 2 link))
+         (file (car (split-string value "::" t)))
+         (search (cadr (split-string value "::" t))))
+    (cond
+     ((string-equal type "id")
+      (org-with-point-at (org-id-find value t)
+        (yankpad-snippets-at-point t)))
+     ((string-equal type "file")
+      (with-current-buffer (find-file-noselect (if (file-name-absolute-p file)
+                                                   file
+                                                 (expand-file-name file)))
+        (if search
+            (let ((org-link-search-must-match-exact-headline t))
+              (org-link-search search)
+              (yankpad-snippets-at-point t))
+          (cl-reduce #'append
+                     (org-map-entries (lambda () (yankpad-snippets-at-point t)))))))
+     (t
+      (user-error "Link type `%s' isn't supported by Yankpad" type)))))
+
+(defun yankpad-snippets-at-point (&optional remove-props)
+  "Return snippets at point.
+If REMOVE-PROPS is non nil, `org-mode' property drawers will be
+removed from the snippet text."
+  (let* ((heading (substring-no-properties (org-get-heading t t t t)))
+         (link (and (string-match org-bracket-link-regexp heading)
+                    (match-string 1 heading))))
+    (if link
+        (yankpad-snippets-from-link link)
+      (if (save-excursion (org-goto-first-child))
+          (cl-reduce #'append
+                     (org-map-entries
+                      (lambda () (yankpad-snippets-at-point t))
+                      (format "+LEVEL=%s" (1+ (org-current-level))) 'tree))
+        (let* ((text (substring-no-properties (org-remove-indentation (org-get-entry))))
+               (tags (org-get-tags))
+               (src-blocks (when (member "src" tags)
+                             (org-element-map (org-element-at-point) 'src-block #'identity))))
+          (when remove-props
+            (setq text (string-trim-left
+                        (replace-regexp-in-string org-property-drawer-re "" text))))
+          (list (list heading tags src-blocks text)))))))
 
 (defun yankpad--snippets (category-name)
   "Get an alist of the snippets in CATEGORY-NAME.
@@ -492,18 +523,11 @@ Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
              (mapcar (lambda (d)
                        (list (concat (car d) yankpad-expand-separator) nil nil (cdr d)))
                      (yankpad-category-descriptions category-name)))
-           (mapcar (lambda (h)
-                     (let* ((heading (org-element-property :raw-value h))
-                            (pos (org-element-property :contents-begin h))
-                            (text (with-temp-buffer
-                                    (insert-file-contents yankpad-file)
-                                    (goto-char pos)
-                                    (org-remove-indentation (org-get-entry))))
-                            (tags (org-element-property :tags h))
-                            (src-blocks (when (member "src" tags)
-                                          (org-element-map h 'src-block (lambda (x) x)))))
-                       (list heading tags src-blocks text)))
-                   (yankpad--snippet-elements category-name)))))
+           (org-with-point-at (yankpad-category-marker category-name)
+             (cl-reduce #'append
+                        (org-map-entries #'yankpad-snippets-at-point
+                                         (format "+LEVEL=%s" (1+ yankpad-category-heading-level))
+                                         'tree))))))
     (append snippets (cl-reduce #'append (mapcar #'yankpad--snippets include)))))
 
 ;;;###autoload
