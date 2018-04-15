@@ -505,7 +505,9 @@ removed from the snippet text."
         (let* ((text (substring-no-properties (org-remove-indentation (org-get-entry))))
                (tags (org-get-tags))
                (src-blocks (when (member "src" tags)
-                             (org-element-map (org-element-at-point) 'src-block #'identity))))
+			     (org-element-map 
+				 (with-temp-buffer (insert text) (org-element-parse-buffer))
+				 'src-block #'identity))))
           (when remove-props
             (setq text (string-trim-left
                         (replace-regexp-in-string org-property-drawer-re "" text))))
