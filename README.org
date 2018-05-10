@@ -1,6 +1,7 @@
 #+TITLE:yankpad.el [[https://melpa.org/#/yankpad][file:https://melpa.org/packages/yankpad-badge.svg]]
 
-[[https://kungsgeten.github.io/yankpad.html][Blog post about Yankpad]]
+- [[https://kungsgeten.github.io/yankpad.html][Blog post about Yankpad]]
+- [[https://youtu.be/xkkyE7d0Bpc][Screencast of Yankpad]] (thanks [[https://github.com/zeltak][zeltak]])
 
 Let's say that you have text snippets that you want to paste, but that [[https://joaotavora.github.io/yasnippet/][yasnippet]]
 or [[https://www.emacswiki.org/emacs/SkeletonMode][skeleton]] is a bit too much when you do not need a shortcut/abbrev for your
