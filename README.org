@@ -29,12 +29,21 @@ the yankpad:
 
   ,* Category 2
 
-    Descriptive lists at the top-level of a category will be treated as snippets.
-    You can set them to be treated as =abbrev-mode= abbrevs instead, by setting
-    =yankpad-descriptive-list-treatment= to abbrev.
+    Descriptive lists will be treated as snippets. You can set them to be treated
+    as =abbrev-mode= abbrevs instead, by setting
+    =yankpad-descriptive-list-treatment= to abbrev. If a heading could be
+    considered to be a snippet, add the =snippetlist= tag to ignore the snippet
+    and scan it for descriptive lists instead.
 
     - name :: Erik Sjöstrand
     - key :: Typing "key" followed by `yankpad-expand' will insert this snippet.
+
+  ,** Descriptive list example 2                  :snippetlist:
+
+     This heading would normally be considered a snippet, but because of the
+     =:snippetlist:= tag, it is scanned for descriptive lists instead.
+
+     - foo :: bar
 
   ,** Explaining categories
 
@@ -165,7 +174,7 @@ Here's an example setup using the excellent [[https://github.com/jwiegley/use-pa
 
 * Usage
 
-1. Add snippet entries to your =yankpad-file=. Level 1 headings are considered to be categories (by default). Also descriptive lists at the category level are treated as snippets by default. A quick way to open your =yankpad-file= is to use =M-x yankpad-edit=. You can also add snippets to the current =yankpad-category= by using =M-x yankpad-capture=, or with =M-x yankpad-aya-persist= if you're a [[https://github.com/abo-abo/auto-yasnippet][auto-yasnippet]] user.
+1. Add snippet entries to your =yankpad-file=. Level 1 headings are considered to be categories (by default). Also descriptive lists are treated as snippets by default (except if they're in a heading without children, in which case the heading needs a =:snippetlist:= if it should be scanned for descriptive lists). A quick way to open your =yankpad-file= is to use =M-x yankpad-edit=. You can also add snippets to the current =yankpad-category= by using =M-x yankpad-capture=, or with =M-x yankpad-aya-persist= if you're a [[https://github.com/abo-abo/auto-yasnippet][auto-yasnippet]] user.
 2. Insert a snippet with =M-x yankpad-insert=. If the snippet has a keyword (it starts with a word followed by a colon), you can write that keyword into the buffer and use =M-x yankpad-expand= instead. It may be useful to bind these commands to some key on your keyboard. You can also use =company-yankpad= to expand a snippet using =company-mode= (thanks [[https://github.com/sid-kurias][sid-kurias]] for contributing). If you want to insert the last snippet again, you can use =M-x yankpad-repeat= (bind that to a key if you're using it frequently).
 3. If you want to change category, use =M-x yankpad-set-category=. If you have a category with the same name as a major-mode (for instance =org-mode=), that category will be locally set when switching major-mode. In the same manner you can name a category to one of your Projectile project names (if Projectile is installed). If both cases are true, the Projectile category becomes active, but the snippets from the major mode are appended as well. If you later change category with =M-x yankpad-set-category=, the major-mode and project snippets will be appended to the chosen category.
 4. If you want to append snippets from another of your categories (basically like having two or more categories active at the same time), use =M-x yankpad-append-category=. If you want one of your categories to /always/ include snippets from another category; set the =INCLUDE= [[https://orgmode.org/manual/Property-syntax.html#Property-syntax][property]] of the category heading (several categories can be included this way, by separating them with =|=, see example at the top of this readme).
@@ -203,12 +212,14 @@ Snippets in your Yankpad can have tags, and some of these have special meanings:
 - =wrap= :: Sets =yas-wrap-around-region= to =t= for this snippet.
 - =wrap_nil= :: Sets =yas-wrap-around-region= to =nil= for this snippet.
 - =<key>= :: The last tag of a snippet (except if its one of the above) will add the tag as a keybinding when first calling =yankpad-map=. If the last tag is =o=, then using =M-x yankpad-map o= will insert that snippet. This is most useful if you bind =yankpad-map= to a key. You can also have multiple letters in the tag, which will be treated as key sequences: if the last tag is =yy= then =M-x yankpad-map y y= will trigger it.
+- =snippetlist= :: With this tag, =yankpad= will not actually consider the heading to be a snippet. Instead it will scan the heading for descriptive lists and treat them according to =yankpad-descriptive-list-treatment=.
 * Integration with =abbrev-mode=
 
 If you set =yankpad-descriptive-list-treatment= to ='abbrev=, descriptive lists inside =yankpad= categories will be handled by =abbrev-mode= instead of being considered as snippets.
 
 * Changelog
 
+- 2.15 (June 2018) :: Descriptive lists defining snippets can now be placed anywhere under a category, and not only at the =yankpad-category-level=. If placed in a heading without children, the heading needs the =:snippetlist:= tag (otherwise it will be considered to be a normal snippet).
 - 2.10 (April 2018) :: Snippets can be spread between files, by using links in snippet headlines. Only headlines without subtrees are considered to be snippets, which means you can organize your snippets in different subtrees. =yankpad-snippet-heading-level= is removed, since it isn't needed anymore.
 - 2.00 (March 2018) :: Snippets, with keywords, may now be defined in descriptive lists. These lists could instead be treated by =abbrev-mode=. A category can be tagged as =:global:= in order to include its snippets in all categories.
 - 1.90 (March 2018) :: Added =yankpad-map-simulate=. =yankpad-map= has a helper text (thanks [[https://github.com/akirak][akirak]]). =wrap= tags has been added. =yankpad-aya-persist= for [[https://github.com/abo-abo/auto-yasnippet][auto-yasnippet]] added.
