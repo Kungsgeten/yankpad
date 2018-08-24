@@ -315,7 +315,7 @@ Return the result of the function output as a string."
     (cond
      (src-blocks
       (yankpad--run-snippet
-       (list name nil nil
+       (list name tags nil
              (mapconcat
               (lambda (x)
                 (org-remove-indentation (org-element-property :value x)))
