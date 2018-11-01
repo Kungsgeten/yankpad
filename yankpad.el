@@ -5,7 +5,7 @@
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 2.15
+;; Version: 2.20
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ((emacs "24"))
 
@@ -123,6 +123,15 @@
 ;; * Global category       :global:
 ;; ** Always available
 ;;    Snippets in a category with the :global: tag are always available for expansion.
+;; * Default                                           :global:
+;; ** Fallback for major-mode categories
+;;
+;; If you open a file, but have no category named after its major-mode, a
+;; category named "Default" will be used instead (if you have it defined in your
+;;                                                   Yankpad). It is probably a good idea to make this category global. You can
+;; change the name of the default category by setting the variable
+;; yankpad-default-category.
+
 ;;; Code:
 
 (require 'org-element)
@@ -138,6 +147,9 @@
 (defvar yankpad-category nil
   "The current yankpad category.  Change with `yankpad-set-category'.")
 (put 'yankpad-category 'safe-local-variable #'string-or-null-p)
+
+(defvar yankpad-default-category "Default"
+  "Used as fallback if no category is found when running `yankpad-local-category-to-major-mode'.")
 
 (defvar yankpad-category-heading-level 1
   "The `org-mode' heading level of categories in the `yankpad-file'.")
@@ -575,10 +587,14 @@ Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
 
 (defun yankpad-local-category-to-major-mode ()
   "Try to change `yankpad-category' to match the buffer's major mode.
-If successful, make `yankpad-category' buffer-local."
+If successful, make `yankpad-category' buffer-local.
+If no major mode category is found, it uses `yankpad-default-category',
+if that is defined in the `yankpad-file'."
   (when (file-exists-p yankpad-file)
-    (let ((category (car (member (symbol-name major-mode)
-                                 (yankpad--categories)))))
+    (let* ((categories (yankpad--categories))
+           (category (or (car (member (symbol-name major-mode)
+                                      categories))
+                         (car (member yankpad-default-category categories)))))
       (when category (yankpad-set-local-category category)))))
 
 (add-hook 'after-change-major-mode-hook #'yankpad-local-category-to-major-mode)

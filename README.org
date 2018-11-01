@@ -141,6 +141,15 @@ the yankpad:
 
       Snippets in a category with the :global: tag are always available for
       expansion.
+
+  ,* Default                                           :global:
+  ,** Fallback for major-mode categories
+
+     If you open a file, but have no category named after its major-mode, a
+     category named "Default" will be used instead (if you have it defined in your
+     Yankpad). It is probably a good idea to make this category global. You can
+     change the name of the default category by setting the variable
+     yankpad-default-category.
 #+END_SRC
 
 * Setup
@@ -151,7 +160,7 @@ the yankpad:
 4. Optionally install =yasnippet= and/or =projectile= and/or =company-mode=, if you want the additional yankpad features that those package provide.
 5. That's it!
 
-If you want different heading levels for the categories (default 1), change the value of =yankpad-category-heading-level=. You can also change the tag which defines categories as global, by modifying =yankpad-global-tag=.
+If you want different heading levels for the categories (default 1), change the value of =yankpad-category-heading-level=. You can also change the tag which defines categories as global, by modifying =yankpad-global-tag=. The name of the major-mode fallback category can be changed by modifying =yankpad-default-category=.
 
 By default keywords are defined by a word at the start of a snippet title, followed by a colon (=:=). You can change =:= into another string by changing the =yankpad-expand-separator= variable.
 
@@ -219,6 +228,7 @@ If you set =yankpad-descriptive-list-treatment= to ='abbrev=, descriptive lists 
 
 * Changelog
 
+- 2.20 (November 2018) :: Added the variable =yankpad-default-category=, which is =Default= by default. If you have a category with this name, it will be used for the current file if you don't have a major-mode specific category for that file.
 - 2.15 (June 2018) :: Descriptive lists defining snippets can now be placed anywhere under a category, and not only at the =yankpad-category-level=. If placed in a heading without children, the heading needs the =:snippetlist:= tag (otherwise it will be considered to be a normal snippet).
 - 2.10 (April 2018) :: Snippets can be spread between files, by using links in snippet headlines. Only headlines without subtrees are considered to be snippets, which means you can organize your snippets in different subtrees. =yankpad-snippet-heading-level= is removed, since it isn't needed anymore.
 - 2.00 (March 2018) :: Snippets, with keywords, may now be defined in descriptive lists. These lists could instead be treated by =abbrev-mode=. A category can be tagged as =:global:= in order to include its snippets in all categories.
