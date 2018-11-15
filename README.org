@@ -27,6 +27,11 @@ the yankpad:
       active, and you type the keyword into a buffer and use the "yankpad-expand"
       command, the keyword will be replaced with this snippet.
 
+  ,** more:expands: Multiple keywords
+
+      A snippet can have more than one keyword. This has both "more" and
+      "expands".
+
   ,* Category 2
 
     Descriptive lists will be treated as snippets. You can set them to be treated
@@ -162,7 +167,7 @@ the yankpad:
 
 If you want different heading levels for the categories (default 1), change the value of =yankpad-category-heading-level=. You can also change the tag which defines categories as global, by modifying =yankpad-global-tag=. The name of the major-mode fallback category can be changed by modifying =yankpad-default-category=.
 
-By default keywords are defined by a word at the start of a snippet title, followed by a colon (=:=). You can change =:= into another string by changing the =yankpad-expand-separator= variable.
+At the beginning of your snippet title you may have a list of keywords. These keywords are separated by colons (=:=). For the most part you probably only need one keyword, like =hello: Greetings!=, but you may have several keywords for the same snippet: =hello:hi: Greetings!=. You can change =:= into another string by changing the =yankpad-expand-separator= variable.
 
 Here's an example setup using the excellent [[https://github.com/jwiegley/use-package][use-package]]:
 
@@ -228,7 +233,7 @@ If you set =yankpad-descriptive-list-treatment= to ='abbrev=, descriptive lists 
 
 * Changelog
 
-- 2.20 (November 2018) :: Added the variable =yankpad-default-category=, which is =Default= by default. If you have a category with this name, it will be used for the current file if you don't have a major-mode specific category for that file.
+- 2.20 (November 2018) :: Added the variable =yankpad-default-category=, which is =Default= by default. If you have a category with this name, it will be used for the current file if you don't have a major-mode specific category for that file. A snippet can now have several expand keywords, just separate them with colons.
 - 2.15 (June 2018) :: Descriptive lists defining snippets can now be placed anywhere under a category, and not only at the =yankpad-category-level=. If placed in a heading without children, the heading needs the =:snippetlist:= tag (otherwise it will be considered to be a normal snippet).
 - 2.10 (April 2018) :: Snippets can be spread between files, by using links in snippet headlines. Only headlines without subtrees are considered to be snippets, which means you can organize your snippets in different subtrees. =yankpad-snippet-heading-level= is removed, since it isn't needed anymore.
 - 2.00 (March 2018) :: Snippets, with keywords, may now be defined in descriptive lists. These lists could instead be treated by =abbrev-mode=. A category can be tagged as =:global:= in order to include its snippets in all categories.
