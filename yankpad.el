@@ -424,7 +424,7 @@ This function can be added to `hippie-expand-try-functions-list'."
       (catch 'loop
         (mapc
          (lambda (snippet)
-           (when (string-match-p (concat "\\b" snippet-prefix)
+           (when (string-match-p (concat "\\b\\|" yankpad-expand-separator snippet-prefix)
                                  (car (split-string (car snippet) " ")))
              (delete-region (car bounds) (cdr bounds))
              (yankpad--run-snippet snippet)
