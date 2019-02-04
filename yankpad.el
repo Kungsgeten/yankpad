@@ -653,7 +653,9 @@ Each element is (KEY . DESCRIPTION), both strings."
              (org-element-map dl 'item
                (lambda (i)
                  (cons (org-no-properties (car (org-element-property :tag i)))
-                       (org-no-properties (string-trim (caddar (org-element-contents i))))))))))))))
+                       (string-trim (buffer-substring-no-properties
+                                     (org-element-property :contents-begin i)
+                                     (org-element-property :contents-end i)))))))))))))
 
 ;; `company-yankpad--name-or-key' and `company-yankpad' are Copyright (C) 2017
 ;; Sidart Kurias (https://github.com/sid-kurias/) and are included by permission
