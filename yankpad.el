@@ -374,9 +374,9 @@ Return the result of the function output as a string."
 
 (defun yankpad--remove-id-from-yankpad-capture ()
   "Remove ID property from last `yankpad-capture-snippet', save `yankpad-file'."
-  (let* ((properties (org-entry-properties org-capture-last-stored-marker))
+  (let* ((properties (ignore-errors (org-entry-properties org-capture-last-stored-marker)))
          (file (cdr (assoc "FILE" properties))))
-    (when (file-equal-p file yankpad-file)
+    (when (and file (file-equal-p file yankpad-file))
       (when (org-entry-delete org-capture-last-stored-marker "ID")
         (with-current-buffer (get-file-buffer file)
           (save-buffer)))
