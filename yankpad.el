@@ -328,10 +328,12 @@ Return the result of the function output as a string."
      (src-blocks
       (yankpad--run-snippet
        (list name tags nil
-             (mapconcat
-              (lambda (x)
-                (org-remove-indentation (org-element-property :value x)))
-              src-blocks ""))))
+             (string-trim-right
+              (mapconcat
+               (lambda (x)
+                 (org-remove-indentation (org-element-property :value x)))
+               src-blocks "")
+              "\n"))))
      ((member "func" tags)
       (yankpad--trigger-snippet-function name content))
      ((member "results" tags)
