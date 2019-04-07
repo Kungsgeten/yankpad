@@ -572,12 +572,13 @@ Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
                        (interactive)
                        (yankpad--run-snippet ',snippet)))))))
           (yankpad-active-snippets))
-    (message "yankpad: %s"
-             (if map-help
-                 (apply 'concat (mapcar 'cdr (sort map-help
-                                                   (lambda (x y)
-                                                     (string-lessp (car x) (car y))))))
-               (format "nothing is defined in %s" yankpad-category))))
+    (let ((message-log-max nil))
+      (message "yankpad: %s"
+               (if map-help
+                   (apply 'concat (mapcar 'cdr (sort map-help
+                                                     (lambda (x y)
+                                                       (string-lessp (car x) (car y))))))
+                 (format "nothing is defined in %s" yankpad-category)))))
   (set-transient-map 'yankpad-keymap))
 
 (defmacro yankpad-map-simulate (key)
