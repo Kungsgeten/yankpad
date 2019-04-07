@@ -141,8 +141,14 @@
 (when (version< (org-version) "8.3")
   (require 'ox))
 
-(defvar yankpad-file (expand-file-name "yankpad.org" org-directory)
-  "The path to your yankpad.")
+(defgroup yankpad nil
+  "Paste snippets from an org-mode file."
+  :group 'editing)
+
+(defcustom yankpad-file (expand-file-name "yankpad.org" org-directory)
+  "The path to your yankpad."
+  :type 'string
+  :group 'yankpad)
 
 (defvar yankpad-category nil
   "The current yankpad category.  Change with `yankpad-set-category'.")
