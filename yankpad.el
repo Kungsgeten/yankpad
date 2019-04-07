@@ -154,8 +154,10 @@
   "The current yankpad category.  Change with `yankpad-set-category'.")
 (put 'yankpad-category 'safe-local-variable #'string-or-null-p)
 
-(defvar yankpad-default-category "Default"
-  "Used as fallback if no category is found when running `yankpad-local-category-to-major-mode'.")
+(defcustom yankpad-default-category "Default"
+  "Used as fallback if no category is found when running `yankpad-local-category-to-major-mode'."
+  :type 'string
+  :group 'yankpad)
 
 (defvar yankpad-category-heading-level 1
   "The `org-mode' heading level of categories in the `yankpad-file'.")
