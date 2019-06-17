@@ -1,6 +1,6 @@
 ;;; yankpad.el --- Paste snippets from an org-mode file         -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016--2018 Erik Sjöstrand
+;; Copyright (C) 2016--2019 Erik Sjöstrand
 ;; MIT License, except company-yankpad and company-yankpad--name-or-key (GPL 3)
 
 ;; Author: Erik Sjöstrand
@@ -429,7 +429,8 @@ This function can be added to `hippie-expand-try-functions-list'."
     (yankpad-set-category))
   (let* ((symbol (symbol-name (symbol-at-point)))
          (bounds (bounds-of-thing-at-point 'symbol))
-         (snippet-prefix (concat symbol yankpad-expand-separator)))
+         (snippet-prefix (concat symbol yankpad-expand-separator))
+         (case-fold-search nil))
     (when (and symbol yankpad-category)
       (catch 'loop
         (mapc
