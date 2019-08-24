@@ -447,7 +447,12 @@ This function can be added to `hippie-expand-try-functions-list'."
 (defun yankpad-edit ()
   "Open the yankpad file for editing."
   (interactive)
-  (find-file yankpad-file))
+  (let ((category yankpad-category))
+    (find-file-other-window yankpad-file)
+    (when category
+      (goto-char (yankpad-category-marker category))
+      (org-show-entry)
+      (org-show-subtree))))
 
 (defun yankpad--file-elements ()
   "Run `org-element-parse-buffer' on the `yankpad-file'."
