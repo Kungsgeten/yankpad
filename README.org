@@ -32,6 +32,26 @@ the yankpad:
       A snippet can have more than one keyword. This has both "more" and
       "expands".
 
+  ,** Regex expands                      :props:
+     :PROPERTIES:
+     :YP_EXPAND_REGEX: number\([[:digit:]]+\)
+     :END:
+
+     If you use the :props: tag the property drawer will not be included in the
+     snippet. Instead the snippet can include information used by Yankpad.
+
+     In this case we have set the property YP_EXPAND_REGEX which can be used instead
+     of the expand keyword. YP_EXPAND_REGEX should be a regular expression, and when
+     you use "yankpad-expand" the regex will be replaced with the snippet.
+
+     The cool thing here is that the entire snippet text is then, before
+     expansion, sent into the Emacs "format" function, with the OBJECTS argument
+     set to the match groups in the regex. %s
+
+     In this example, the "percent s" at the end of the last paragraph will be
+     replaced with the digit matched by the regex. So if I write "number12" and
+     use "yankpad-expand" the "percent s" will be replaced with 12.
+
   ,* Category 2
 
     Descriptive lists will be treated as snippets. You can set them to be treated
@@ -218,6 +238,7 @@ Now pressing =f5= would trigger the snippet bound to =j= inside =yankpad-map=.
 Snippets in your Yankpad can have tags, and some of these have special meanings:
 
 - =src= :: If a snippet has a tag named =src=, all code in [[https://orgmode.org/guide/Working-With-Source-Code.html][source blocks]] inside the snippet will be concatenated -- becoming the new snippet. All other text inside the snippet is discarded, so it can be used as comments for the source blocks. This feature is inspired by [[https://github.com/tuhdo/org-recipes][org-recipes]].
+- props :: The =props= tag removes the property drawer from the snippet, before expanding. The properties in the drawer can be used to collect data from the snippet. See "Special properties" below.
 - =func= :: If a snippet has a tag named =func=, it won't insert text. Instead a function will be executed upon "inserting" the snippet. The name of the snippet can be an elisp function, which will be run without arguments. Instead, the function could hold a single =org-mode= src-block, which will be executed in a separate buffer (so the code in the src-block does not have access to the current buffer).
 - =results= :: Works like =func=, but the output of the function will be inserted into the buffer.
 - =indent_nil= :: By default the inserted text will be indented (uses =indent_region= or the settings of =yas-indent-line= if =yas-minor-mode= is active). By using =indent_nil=, no indentation will occur.
@@ -227,12 +248,33 @@ Snippets in your Yankpad can have tags, and some of these have special meanings:
 - =wrap_nil= :: Sets =yas-wrap-around-region= to =nil= for this snippet.
 - =<key>= :: The last tag of a snippet (except if its one of the above) will add the tag as a keybinding when first calling =yankpad-map=. If the last tag is =o=, then using =M-x yankpad-map o= will insert that snippet. This is most useful if you bind =yankpad-map= to a key. You can also have multiple letters in the tag, which will be treated as key sequences: if the last tag is =yy= then =M-x yankpad-map y y= will trigger it.
 - =snippetlist= :: With this tag, =yankpad= will not actually consider the heading to be a snippet. Instead it will scan the heading for descriptive lists and treat them according to =yankpad-descriptive-list-treatment=.
+* Special properties
+
+If a snippet has a property drawer, and the =:props:= tag, the drawer will be removed from the snippet text and the properties will be stored in the snippet. At the moment there's only one property that has an effect on Yankpad's behaviour, but more might be added in the future.
+
+- =YP_EXPAND_REGEX= :: If this property is set, it will be used /instead/ of any expansion keywords in the snippet title. The property is a regular expression. When using =yankpad-expand= the snippet will be expanded if the symbol at point matches the regex. Before expansion the snippet content will be sent to Emacs' =format= function, where the =OBJECTS= argument is the matched groups from the regex. Example: If you have =source_\(.+\)= as the regex property, and expand =source_python=, the first =%s= in your snippet text will be replaced with =python=.
+
+You could add your own special properties using =yankpad-before-snippet-hook=. This hook is run before a snippet is inserted, and the hook functions should take the snippet as their only argument. A snippet is a list with four elements: =(snippet name, a list of tags, content, an alist of properties)=. If you use =setf= on the snippet, you can change it before expansion. Here's an example that would upcase a snippet if it includes the =UPCASE= property:
+
+#+BEGIN_SRC emacs-lisp
+(defun yp/upcase-snippet (snippet)
+  ;; Check if we have a property named UPCASE
+  ;; (nth 4 snippet) holds all the properties
+  (when (assoc "UPCASE" (nth 4 snippet))
+    ;; (nth 3 snippet) is the snippet content, let's upcase it!
+    (setf (nth 3 snippet)
+          (upcase (nth 3 snippet)))))
+
+(add-hook 'yankpad-before-snippet-hook 'yp/upcase-snippet)
+#+END_SRC
+
 * Integration with =abbrev-mode=
 
 If you set =yankpad-descriptive-list-treatment= to ='abbrev=, descriptive lists inside =yankpad= categories will be handled by =abbrev-mode= instead of being considered as snippets.
 
 * Changelog
 
+- 2.30 (September 2019) :: Added property functionality via the tag =props=. Added regex expansion with the =YP_EXPAND_REGEX= property. Added =yankpad-before-snippet-hook=.
 - 2.20 (November 2018) :: Added the variable =yankpad-default-category=, which is =Default= by default. If you have a category with this name, it will be used for the current file if you don't have a major-mode specific category for that file. A snippet can now have several expand keywords, just separate them with colons.
 - 2.15 (June 2018) :: Descriptive lists defining snippets can now be placed anywhere under a category, and not only at the =yankpad-category-level=. If placed in a heading without children, the heading needs the =:snippetlist:= tag (otherwise it will be considered to be a normal snippet).
 - 2.10 (April 2018) :: Snippets can be spread between files, by using links in snippet headlines. Only headlines without subtrees are considered to be snippets, which means you can organize your snippets in different subtrees. =yankpad-snippet-heading-level= is removed, since it isn't needed anymore.
