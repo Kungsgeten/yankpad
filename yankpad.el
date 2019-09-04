@@ -343,53 +343,54 @@ Return the result of the function output as a string."
 (defun yankpad--run-snippet (snippet)
   "Triggers the SNIPPET behaviour."
   (setq yankpad--last-snippet snippet)
-  (run-hook-with-args 'yankpad-before-snippet-hook snippet)
-  (let ((name (car snippet))
-        (tags (nth 1 snippet))
-        (src-blocks (nth 2 snippet))
-        (content (nth 3 snippet)))
-    (cond
-     (src-blocks
-      (yankpad--run-snippet
-       (list name tags nil
-             (string-trim-right
-              (mapconcat
-               (lambda (x)
-                 (org-remove-indentation (org-element-property :value x)))
-               src-blocks "")
-              "\n"))))
-     ((member "func" tags)
-      (yankpad--trigger-snippet-function name content))
-     ((member "results" tags)
-      (insert (yankpad--trigger-snippet-function name content)))
-     (t
-      (if (> (length content) 0)
-          ;; Respect the tree level when yanking org-mode headings.
-          (let ((prepend-asterisks 1)
-                (indent (cond ((member "indent_nil" tags)
+  (let ((snippet (copy-sequence snippet)))
+    (run-hook-with-args 'yankpad-before-snippet-hook snippet)
+    (let ((name (car snippet))
+          (tags (nth 1 snippet))
+          (src-blocks (nth 2 snippet))
+          (content (nth 3 snippet)))
+      (cond
+       (src-blocks
+        (yankpad--run-snippet
+         (list name tags nil
+               (string-trim-right
+                (mapconcat
+                 (lambda (x)
+                   (org-remove-indentation (org-element-property :value x)))
+                 src-blocks "")
+                "\n"))))
+       ((member "func" tags)
+        (yankpad--trigger-snippet-function name content))
+       ((member "results" tags)
+        (insert (yankpad--trigger-snippet-function name content)))
+       (t
+        (if (> (length content) 0)
+            ;; Respect the tree level when yanking org-mode headings.
+            (let ((prepend-asterisks 1)
+                  (indent (cond ((member "indent_nil" tags)
+                                 nil)
+                                ((member "indent_fixed" tags)
+                                 'fixed)
+                                ((member "indent_auto" tags)
+                                 'auto)
+                                ((and (require 'yasnippet nil t) yas-minor-mode)
+                                 yas-indent-line)
+                                (t t)))
+                  (wrap (cond ((or (not (and (require 'yasnippet nil t) yas-minor-mode))
+                                   (member "wrap_nil" tags))
                                nil)
-                              ((member "indent_fixed" tags)
-                               'fixed)
-                              ((member "indent_auto" tags)
-                               'auto)
-                              ((and (require 'yasnippet nil t) yas-minor-mode)
-                               yas-indent-line)
-                              (t t)))
-                (wrap (cond ((or (not (and (require 'yasnippet nil t) yas-minor-mode))
-                                 (member "wrap_nil" tags))
-                             nil)
-                            ((member "wrap" tags)
-                             t)
-                            (t yas-wrap-around-region))))
-            (when (and yankpad-respect-current-org-level
-                       (equal major-mode 'org-mode)
-                       (org-current-level))
-              (setq prepend-asterisks (org-current-level)))
-            (yankpad--insert-snippet-text
-             (replace-regexp-in-string
-              "^\\\\[*]" (make-string prepend-asterisks ?*) content)
-             indent wrap))
-        (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))
+                              ((member "wrap" tags)
+                               t)
+                              (t yas-wrap-around-region))))
+              (when (and yankpad-respect-current-org-level
+                         (equal major-mode 'org-mode)
+                         (org-current-level))
+                (setq prepend-asterisks (org-current-level)))
+              (yankpad--insert-snippet-text
+               (replace-regexp-in-string
+                "^\\\\[*]" (make-string prepend-asterisks ?*) content)
+               indent wrap))
+          (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file."))))))))
 
 (defun yankpad-repeat ()
   "Repeats the last used snippet."
@@ -452,8 +453,9 @@ This function can be added to `hippie-expand-try-functions-list'."
          (lambda (snippet)
            ;; See if there's an expand regex
            (if-let ((regex (cdr (assoc "YP_EXPAND_REGEX" (nth 4 snippet)))))
-               (when (string-match (concat "\\b" regex) symbol)
+               (when (string-match (concat "\\b" regex "\\b") symbol)
                  (let ((match (cddr (match-data)))
+                       (snippet (copy-sequence snippet))
                        strings)
                    (while match
                      (push (substring symbol (pop match) (pop match)) strings))
