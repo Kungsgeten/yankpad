@@ -215,15 +215,15 @@ If 'abbrev, the items will overwrite `local-abbrev-table'."
   (or yankpad--active-snippets (yankpad-set-active-snippets)))
 
 ;;;###autoload
-(defun yankpad-set-category ()
-  "Change the yankpad category."
-  (interactive)
-  (setq yankpad-category
-        (completing-read "Category: " (yankpad--categories)))
+(defun yankpad-set-category (category)
+  "Set `yankpad-category' to CATEGORY."
+  (interactive (list (completing-read "Category: " (yankpad--categories))))
+  (setq yankpad-category category)
   (run-hooks 'yankpad-switched-category-hook))
 
 (defun yankpad-set-local-category (category)
   "Set `yankpad-category' to CATEGORY locally."
+  (interactive (list (completing-read "Category: " (yankpad--categories))))
   (set (make-local-variable 'yankpad-category) category)
   (set (make-local-variable 'yankpad--active-snippets) nil)
   (run-hooks 'yankpad-switched-category-hook))
@@ -249,12 +249,9 @@ Also append major mode and/or projectile categories if `yankpad-category' is loc
     (yankpad-set-category)
     (yankpad-set-active-snippets)))
 
-(defun yankpad-append-category (&optional category)
-  "Add snippets from CATEGORY into the list of active snippets.
-Prompts for CATEGORY if it isn't provided."
-  (interactive)
-  (unless category
-    (setq category (completing-read "Category: " (yankpad--categories))))
+(defun yankpad-append-category (category)
+  "Add snippets from CATEGORY into the list of active snippets."
+  (interactive (list (completing-read "Category: " (yankpad--categories))))
   (unless (equal category yankpad-category)
     (unless yankpad--active-snippets (yankpad-set-active-snippets))
     (setq yankpad--active-snippets
