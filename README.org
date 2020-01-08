@@ -215,7 +215,7 @@ Here's an example setup using the excellent [[https://github.com/jwiegley/use-pa
 5. To quickly open your =yankpad-file= for editing, run =M-x yankpad-edit=.
 6. Yankpad caches your snippets, making it a bit snappier to insert snippets from the yankpad. If you've edited your =yankpad-file= you might want to use =M-x yankpad-reload= to clear the snippet cache and reload your snippets in the current category.
 
-Since a =*= at the beginning of a line would specify a new heading, lines can not begin with =*=. However, you can write =\*= at the beginning of a line, which will be replaced by a =*= when expanding the snippet. If you use this in order to yank snippets into an =org-mode= buffer, the new headings will be automatically indented -- depending on the current level -- by default. This can be changed by setting the variable =yankpad-respect-current-org-level= to =nil=.
+Since a =*= at the beginning of a line would specify a new heading, lines can not begin with =*=. However, you can write =\*= at the beginning of a line, which will be replaced by a =*= when expanding the snippet. If you use this in order to yank snippets into an =org-mode= buffer, the new headings will be automatically indented -- depending on the current level -- by default. This can be changed by setting the variable =yankpad-respect-current-org-level= to =nil=, or by using special tags.
 
 Sometimes it may be useful to set the category automatically for a specific file. In this case you can add =yankpad-category= as a [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html][file variable]], for instance by adding this line at the top of your file:
 
@@ -248,6 +248,8 @@ Snippets in your Yankpad can have tags, and some of these have special meanings:
 - =wrap_nil= :: Sets =yas-wrap-around-region= to =nil= for this snippet.
 - =<key>= :: The last tag of a snippet (except if its one of the above) will add the tag as a keybinding when first calling =yankpad-map=. If the last tag is =o=, then using =M-x yankpad-map o= will insert that snippet. This is most useful if you bind =yankpad-map= to a key. You can also have multiple letters in the tag, which will be treated as key sequences: if the last tag is =yy= then =M-x yankpad-map y y= will trigger it.
 - =snippetlist= :: With this tag, =yankpad= will not actually consider the heading to be a snippet. Instead it will scan the heading for descriptive lists and treat them according to =yankpad-descriptive-list-treatment=.
+- orglevel :: As if =yankpad-respect-current-org-level= were true for this snippet.
+- no_orglevel :: As if =yankpad-respect-current-org-level= were false for this snippet.
 * Special properties
 
 If a snippet has a property drawer, and the =:props:= tag, the drawer will be removed from the snippet text and the properties will be stored in the snippet. At the moment there's only one property that has an effect on Yankpad's behaviour, but more might be added in the future.

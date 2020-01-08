@@ -386,8 +386,10 @@ Return the result of the function output as a string."
                               ((member "wrap" tags)
                                t)
                               (t yas-wrap-around-region))))
-              (when (and yankpad-respect-current-org-level
-                         (equal major-mode 'org-mode)
+              (when (and (equal major-mode 'org-mode)
+                         (or yankpad-respect-current-org-level
+                             (member "orglevel" tags))
+                         (not (member "no_orglevel" tags))
                          (org-current-level))
                 (setq prepend-asterisks (org-current-level)))
               (yankpad--insert-snippet-text
