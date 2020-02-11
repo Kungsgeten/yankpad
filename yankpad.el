@@ -735,7 +735,7 @@ FN is the function that will extract either name or key."
   "Company backend for yankpad."
   (interactive (list 'interactive))
   (if (require 'company nil t)
-      (case command
+      (cl-case command
         (interactive (company-begin-backend 'company-yankpad))
         (prefix (company-grab-symbol))
         (annotation (car (company-yankpad--name-or-key
