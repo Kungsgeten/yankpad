@@ -138,6 +138,7 @@
 (require 'org-capture)
 (require 'org-macs)
 (require 'thingatpt)
+(require 'subr-x)
 (when (version< (org-version) "8.3")
   (require 'ox))
 
