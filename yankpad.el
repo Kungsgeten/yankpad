@@ -1,6 +1,6 @@
 ;;; yankpad.el --- Paste snippets from an org-mode file         -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016--2019 Erik Sjöstrand
+;; Copyright (C) 2016--present Erik Sjöstrand
 ;; MIT License, except company-yankpad and company-yankpad--name-or-key (GPL 3)
 
 ;; Author: Erik Sjöstrand
@@ -703,7 +703,9 @@ Each element is (KEY . DESCRIPTION), both strings."
                                   #'org-element-lineage)
                                 dl '(headline))))
            (when (and (equal (org-element-property :type dl) 'descriptive)
-                      (or (save-excursion
+                      (or (equal (org-element-property :level parent)
+                                 yankpad-category-heading-level)
+                          (save-excursion
                             (goto-char (org-element-property :begin parent))
                             (org-goto-first-child))
                           (member "snippetlist" (org-element-property :tags parent))))
