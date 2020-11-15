@@ -170,6 +170,17 @@
   :type 'boolean
   :group 'yankpad)
 
+(defcustom yankpad-auto-category-functions
+  '(yankpad-major-mode-category
+    yankpad-projectile-category)
+  "List of functions that return an implicit category name.
+
+Each item is a function that returns a category name or
+nil. Categories returned from these functions are added as well
+as the category explicitly selected by the user and global
+categories."
+  :type '(repeat function))
+
 (defvar yankpad-switched-category-hook nil
   "Hooks run after changing `yankpad-category'.")
 
@@ -233,6 +244,15 @@ If 'abbrev, the items will overwrite `local-abbrev-table'."
   (set (make-local-variable 'yankpad--active-snippets) nil)
   (run-hooks 'yankpad-switched-category-hook))
 
+(defsubst yankpad-major-mode-category ()
+  "Return a category name based on the major mode."
+  (symbol-name major-mode))
+
+(defsubst yankpad-projectile-category ()
+  "Return a category name based on the projectile project name."
+  (when (require 'projectile nil t)
+    (projectile-project-name)))
+
 (defun yankpad-set-active-snippets ()
   "Set the `yankpad--active-snippets' to the snippets in the active category.
 If no active category, call `yankpad-set-category'.
@@ -241,14 +261,10 @@ Also append major mode and/or projectile categories if `yankpad-category' is loc
       (progn
         (setq yankpad--active-snippets (yankpad--snippets yankpad-category))
         (when (local-variable-p 'yankpad-category)
-          (let ((categories (yankpad--categories)))
-            (when-let ((major-mode-category (car (member (symbol-name major-mode)
-                                                         categories))))
-              (yankpad-append-category major-mode-category))
-            (when (require 'projectile nil t)
-              (when-let ((projectile-category (car (member (projectile-project-name)
-                                                           categories))))
-                (yankpad-append-category projectile-category)))))
+          (thread-last (mapcar #'funcall yankpad-auto-category-functions)
+            (delq nil)
+            (seq-intersection (yankpad--categories))
+            (mapc #'yankpad-append-category)))
         (mapc #'yankpad-append-category (yankpad--global-categories))
         yankpad--active-snippets)
     (yankpad-set-category)
