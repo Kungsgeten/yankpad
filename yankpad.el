@@ -257,18 +257,16 @@ If 'abbrev, the items will overwrite `local-abbrev-table'."
   "Set the `yankpad--active-snippets' to the snippets in the active category.
 If no active category, call `yankpad-set-category'.
 Also append major mode and/or projectile categories if `yankpad-category' is local."
-  (if yankpad-category
-      (progn
-        (setq yankpad--active-snippets (yankpad--snippets yankpad-category))
-        (when (local-variable-p 'yankpad-category)
-          (thread-last (mapcar #'funcall yankpad-auto-category-functions)
-            (delq nil)
-            (seq-intersection (yankpad--categories))
-            (mapc #'yankpad-append-category)))
-        (mapc #'yankpad-append-category (yankpad--global-categories))
-        yankpad--active-snippets)
-    (yankpad-set-category)
-    (yankpad-set-active-snippets)))
+  (unless yankpad-category
+    (yankpad-set-category))
+  (setq yankpad--active-snippets (yankpad--snippets yankpad-category))
+  (when (local-variable-p 'yankpad-category)
+    (thread-last (mapcar #'funcall yankpad-auto-category-functions)
+      (delq nil)
+      (seq-intersection (yankpad--categories))
+      (mapc #'yankpad-append-category)))
+  (mapc #'yankpad-append-category (yankpad--global-categories))
+  yankpad--active-snippets)
 
 (defun yankpad-append-category (&optional category)
   "Add snippets from CATEGORY into the list of active snippets.
