@@ -7,7 +7,7 @@
 ;; URL: http://github.com/Kungsgeten/yankpad
 ;; Version: 2.30
 ;; Keywords: abbrev convenience
-;; Package-Requires: ((emacs "25"))
+;; Package-Requires: ((emacs "25.1"))
 
 ;;; Commentary:
 
@@ -139,6 +139,7 @@
 (require 'org-macs)
 (require 'thingatpt)
 (require 'subr-x)
+(require 'seq)
 (when (version< (org-version) "8.3")
   (require 'ox))
 
