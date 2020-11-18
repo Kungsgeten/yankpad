@@ -327,6 +327,47 @@ Uses `yankpad-category', and prompts for it if it isn't set."
         (yankpad-set-category)))
   (yankpad-insert-from-current-category))
 
+(defun yankpad-snippet-text (snippet)
+  "Get text from SNIPPET, as a string.
+SNIPPET can be a list: Yankpad's internal representation of
+snippets. It can also be a string, in which case it should match
+a snippet name in the current category."
+  (if (stringp snippet)
+      (if-let ((real-snippet (assoc snippet (yankpad-active-snippets))))
+          (yankpad-snippet-text real-snippet)
+        (error (concat "No snippet named " snippet)))
+    (let ((snippet (copy-sequence snippet)))
+      (let ((name (car snippet))
+            (tags (nth 1 snippet))
+            (src-blocks (nth 2 snippet))
+            (content (nth 3 snippet)))
+        (cond
+         (src-blocks
+          (yankpad-snippet-text
+           (list name tags nil
+                 (string-trim-right
+                  (mapconcat
+                   (lambda (x)
+                     (org-remove-indentation (org-element-property :value x)))
+                   src-blocks "")
+                  "\n"))))
+         ((or (member "func" tags)
+              (member "results" tags))
+          (yankpad--trigger-snippet-function name content))
+         (t
+          (if (> (length content) 0)
+              ;; Respect the tree level when yanking org-mode headings.
+              (let ((prepend-asterisks 1))
+                (when (and (equal major-mode 'org-mode)
+                           (or yankpad-respect-current-org-level
+                               (member "orglevel" tags))
+                           (not (member "no_orglevel" tags))
+                           (org-current-level))
+                  (setq prepend-asterisks (org-current-level)))
+                (replace-regexp-in-string
+                 "^\\\\[*]" (make-string prepend-asterisks ?*) content))
+            (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))))
+
 (defun yankpad--insert-snippet-text (text indent wrap)
   "Insert TEXT into buffer.  INDENT is whether/how to indent the snippet.
 WRAP is the value for `yas-wrap-around-region', if `yasnippet' is available.
@@ -367,54 +408,27 @@ Return the result of the function output as a string."
   (setq yankpad--last-snippet snippet)
   (let ((snippet (copy-sequence snippet)))
     (run-hook-with-args 'yankpad-before-snippet-hook snippet)
-    (let ((name (car snippet))
-          (tags (nth 1 snippet))
-          (src-blocks (nth 2 snippet))
-          (content (nth 3 snippet)))
+    (let ((tags (nth 1 snippet)))
       (cond
-       (src-blocks
-        (yankpad--run-snippet
-         (list name tags nil
-               (string-trim-right
-                (mapconcat
-                 (lambda (x)
-                   (org-remove-indentation (org-element-property :value x)))
-                 src-blocks "")
-                "\n"))))
        ((member "func" tags)
-        (yankpad--trigger-snippet-function name content))
-       ((member "results" tags)
-        (insert (yankpad--trigger-snippet-function name content)))
+        (yankpad-snippet-text snippet))
        (t
-        (if (> (length content) 0)
-            ;; Respect the tree level when yanking org-mode headings.
-            (let ((prepend-asterisks 1)
-                  (indent (cond ((member "indent_nil" tags)
-                                 nil)
-                                ((member "indent_fixed" tags)
-                                 'fixed)
-                                ((member "indent_auto" tags)
-                                 'auto)
-                                ((and (require 'yasnippet nil t) yas-minor-mode)
-                                 yas-indent-line)
-                                (t t)))
-                  (wrap (cond ((or (not (and (require 'yasnippet nil t) yas-minor-mode))
-                                   (member "wrap_nil" tags))
-                               nil)
-                              ((member "wrap" tags)
-                               t)
-                              (t yas-wrap-around-region))))
-              (when (and (equal major-mode 'org-mode)
-                         (or yankpad-respect-current-org-level
-                             (member "orglevel" tags))
-                         (not (member "no_orglevel" tags))
-                         (org-current-level))
-                (setq prepend-asterisks (org-current-level)))
-              (yankpad--insert-snippet-text
-               (replace-regexp-in-string
-                "^\\\\[*]" (make-string prepend-asterisks ?*) content)
-               indent wrap))
-          (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file."))))))))
+        (let ((indent (cond ((member "indent_nil" tags)
+                             nil)
+                            ((member "indent_fixed" tags)
+                             'fixed)
+                            ((member "indent_auto" tags)
+                             'auto)
+                            ((and (require 'yasnippet nil t) yas-minor-mode)
+                             yas-indent-line)
+                            (t t)))
+              (wrap (cond ((or (not (and (require 'yasnippet nil t) yas-minor-mode))
+                               (member "wrap_nil" tags))
+                           nil)
+                          ((member "wrap" tags)
+                           t)
+                          (t yas-wrap-around-region))))
+          (yankpad--insert-snippet-text (yankpad-snippet-text snippet) indent wrap)))))))
 
 (defun yankpad-repeat ()
   "Repeats the last used snippet."
