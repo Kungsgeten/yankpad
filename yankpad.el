@@ -470,6 +470,20 @@ Does not change `yankpad-category'."
       (message (concat "No snippet named " name))
       nil)))
 
+
+(defun keyword-with-bound-at-point ()
+    "Get current keyword and its bound.
+which is from current point to back to first empty char."
+  (save-excursion
+    (let
+        (beg (end (point)))
+      (if
+          (re-search-forward "[[:space:]]" nil t -1)
+          (progn
+            (setq beg (+ (point) 1))
+            (cons (buffer-substring beg end) (cons beg end))
+            )))))
+
 ;;;###autoload
 (defun yankpad-expand (&optional _first)
   "Replace symbol at point with a snippet.
@@ -481,8 +495,9 @@ This function can be added to `hippie-expand-try-functions-list'."
   (when (and (called-interactively-p 'any)
              (not yankpad-category))
     (yankpad-set-category))
-  (let* ((symbol (symbol-name (symbol-at-point)))
-         (bounds (bounds-of-thing-at-point 'symbol))
+  (let* ((symbol-with-bound (keyword-with-bound-at-point))
+         (symbol (car symbol-with-bound))
+         (bounds (cdr symbol-with-bound))
          (snippet-prefix (concat symbol yankpad-expand-separator))
          (case-fold-search nil))
     (when (and symbol yankpad-category)
