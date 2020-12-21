@@ -355,18 +355,18 @@ a snippet name in the current category."
               (member "results" tags))
           (yankpad--trigger-snippet-function name content))
          (t
-          (if (> (length content) 0)
-              ;; Respect the tree level when yanking org-mode headings.
-              (let ((prepend-asterisks 1))
-                (when (and (equal major-mode 'org-mode)
-                           (or yankpad-respect-current-org-level
-                               (member "orglevel" tags))
-                           (not (member "no_orglevel" tags))
-                           (org-current-level))
-                  (setq prepend-asterisks (org-current-level)))
-                (replace-regexp-in-string
-                 "^\\\\[*]" (make-string prepend-asterisks ?*) content))
-            (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file.")))))))))
+          (if (string-empty-p content)
+              (message (concat "\"" name "\" snippet doesn't contain any text. Check your yankpad file."))
+            ;; Respect the tree level when yanking org-mode headings.
+            (let ((prepend-asterisks 1))
+              (when (and (equal major-mode 'org-mode)
+                         (or yankpad-respect-current-org-level
+                             (member "orglevel" tags))
+                         (not (member "no_orglevel" tags))
+                         (org-current-level))
+                (setq prepend-asterisks (org-current-level)))
+              (replace-regexp-in-string
+               "^\\\\[*]" (make-string prepend-asterisks ?*) content)))))))))
 
 (defun yankpad--insert-snippet-text (text indent wrap)
   "Insert TEXT into buffer.  INDENT is whether/how to indent the snippet.
@@ -388,20 +388,20 @@ Use yasnippet and `yas-indent-line' if available."
   "SNIPPETNAME can be an elisp function, without arguments, if CONTENT is nil.
 If non-nil, CONTENT should hold a single `org-mode' src-block, to be executed.
 Return the result of the function output as a string."
-  (if (> (length content) 0)
-      (with-temp-buffer
-        (delay-mode-hooks
-          (org-mode)
-          (insert content)
-          (goto-char (point-min))
-          (if (or (org-in-src-block-p)
-                  (and (ignore-errors (org-next-block 1))
-                       (org-in-src-block-p)))
-              (prin1-to-string (org-babel-execute-src-block))
-            (error "First block in snippet must be an org-mode src block"))))
-    (if (intern-soft snippetname)
-        (prin1-to-string (funcall (intern-soft snippetname)))
-      (error (concat "\"" snippetname "\" isn't a function")))))
+  (if (string-empty-p (string-trim content))
+      (if (intern-soft snippetname)
+          (prin1-to-string (funcall (intern-soft snippetname)))
+        (error (concat "\"" snippetname "\" isn't a function")))
+    (with-temp-buffer
+      (delay-mode-hooks
+        (org-mode)
+        (insert content)
+        (goto-char (point-min))
+        (if (or (org-in-src-block-p)
+                (and (ignore-errors (org-next-block 1))
+                     (org-in-src-block-p)))
+            (prin1-to-string (org-babel-execute-src-block))
+          (error "First block in snippet must be an org-mode src block"))))))
 
 (defun yankpad--run-snippet (snippet)
   "Triggers the SNIPPET behaviour."
