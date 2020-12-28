@@ -265,8 +265,8 @@ Also append major mode and/or projectile categories if `yankpad-category' is loc
     (thread-last (mapcar #'funcall yankpad-auto-category-functions)
       (delq nil)
       (seq-intersection (yankpad--categories))
-      (mapc #'yankpad-append-category)))
-  (mapc #'yankpad-append-category (yankpad--global-categories))
+      (mapc #'yankpad--append-category)))
+  (mapc #'yankpad--append-category (yankpad--global-categories))
   yankpad--active-snippets)
 
 (defun yankpad-append-category (&optional category)
@@ -277,8 +277,12 @@ Prompts for CATEGORY if it isn't provided."
     (setq category (completing-read "Category: " (yankpad--categories))))
   (unless (equal category yankpad-category)
     (unless yankpad--active-snippets (yankpad-set-active-snippets))
-    (setq yankpad--active-snippets
-          (append yankpad--active-snippets (yankpad--snippets category)))))
+    (yankpad--append-category category)))
+
+(defun yankpad--append-category (category)
+  "Add snippets from CATEGORY into the list of active snippets."
+  (setq yankpad--active-snippets
+        (append yankpad--active-snippets (yankpad--snippets category))))
 
 (defun yankpad--add-abbrevs-from-category (category)
   "`define-abbrev' in `local-abbrev-table' for each descriptive list item in CATEGORY."
