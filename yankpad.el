@@ -269,12 +269,10 @@ Also append major mode and/or projectile categories if `yankpad-category' is loc
   (mapc #'yankpad-append-category (yankpad--global-categories))
   yankpad--active-snippets)
 
-(defun yankpad-append-category (&optional category)
+(defun yankpad-append-category (category)
   "Add snippets from CATEGORY into the list of active snippets.
 Prompts for CATEGORY if it isn't provided."
-  (interactive)
-  (unless category
-    (setq category (completing-read "Category: " (yankpad--categories))))
+  (interactive (list (completing-read "Category: " (yankpad--categories))))
   (unless (equal category yankpad-category)
     (unless yankpad--active-snippets (yankpad-set-active-snippets))
     (dolist (x (yankpad--snippets category))
@@ -366,7 +364,7 @@ a snippet name in the current category."
                          (org-current-level))
                 (setq prepend-asterisks (org-current-level)))
               (replace-regexp-in-string
-               "^\\\\[*]" (make-string prepend-asterisks ?*) content)))))))))
+               "^\\\\?[*]" (make-string prepend-asterisks ?*) content)))))))))
 
 (defun yankpad--insert-snippet-text (text indent wrap)
   "Insert TEXT into buffer.  INDENT is whether/how to indent the snippet.
