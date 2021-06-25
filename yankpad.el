@@ -470,18 +470,13 @@ Does not change `yankpad-category'."
       nil)))
 
 
-(defun keyword-with-bound-at-point ()
-    "Get current keyword and its bound.
-which is from current point to back to first empty char."
+(defun yankpad-keyword-with-bounds-at-point ()
+  "Get current keyword and its bounds."
   (save-excursion
-    (let
-        (beg (end (point)))
-      (if
-          (re-search-forward "[[:space:]]" nil t -1)
-          (progn
-            (setq beg (+ (point) 1))
-            (cons (buffer-substring beg end) (cons beg end))
-            )))))
+    (let (beg (end (point)))
+      (when (re-search-forward "[[:space:]]" nil t -1)
+        (setq beg (1+ (point)))
+        (cons (buffer-substring beg end) (cons beg end))))))
 
 ;;;###autoload
 (defun yankpad-expand (&optional _first)
@@ -494,9 +489,9 @@ This function can be added to `hippie-expand-try-functions-list'."
   (when (and (called-interactively-p 'any)
              (not yankpad-category))
     (yankpad-set-category))
-  (let* ((symbol-with-bound (keyword-with-bound-at-point))
-         (symbol (car symbol-with-bound))
-         (bounds (cdr symbol-with-bound))
+  (let* ((symbol-with-bounds (yankpad-keyword-with-bounds-at-point))
+         (symbol (car symbol-with-bounds))
+         (bounds (cdr symbol-with-bounds))
          (snippet-prefix (concat symbol yankpad-expand-separator))
          (case-fold-search nil))
     (when (and symbol yankpad-category)
@@ -517,8 +512,8 @@ This function can be added to `hippie-expand-try-functions-list'."
                    (yankpad--run-snippet snippet)
                    (throw 'loop snippet)))
              ;; Otherwise look for expand keyword
-             (when (string-match-p (concat "\\(\\b\\|" yankpad-expand-separator "\\)" snippet-prefix)
-                                   (car (split-string (car snippet) " ")))
+             (when (string-prefix-p snippet-prefix
+                                    (car (split-string (car snippet) " ")))
                (delete-region (car bounds) (cdr bounds))
                (yankpad--run-snippet snippet)
                (throw 'loop snippet))))
