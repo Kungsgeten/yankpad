@@ -398,7 +398,8 @@ Return the result of the function output as a string."
         (if (or (org-in-src-block-p)
                 (and (ignore-errors (org-next-block 1))
                      (org-in-src-block-p)))
-            (prin1-to-string (org-babel-execute-src-block))
+            (let ((result (org-babel-execute-src-block)))
+              (if (stringp result) result (prin1-to-string result)))
           (error "First block in snippet must be an org-mode src block"))))))
 
 (defun yankpad--run-snippet (snippet)
