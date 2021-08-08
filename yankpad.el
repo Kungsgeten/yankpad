@@ -536,7 +536,7 @@ This function can be added to `hippie-expand-try-functions-list'."
                                 possible-snippets ""))
                  (snippet (cdr snippet-info))
                  (snippet-keyword (car snippet-info)))
-            (delete-region (+ (- (cdr bounds) (length snippet-keyword))) (cdr bounds))
+            (delete-region (- (cdr bounds) (length snippet-keyword)) (cdr bounds))
             (yankpad--run-snippet (cdr snippet-info))
             (throw 'loop snippet)))
         nil))))
