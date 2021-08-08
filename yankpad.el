@@ -473,9 +473,11 @@ Does not change `yankpad-category'."
   "Get current keyword and its bounds."
   (save-excursion
     (let (beg (end (point)))
-      (when (re-search-forward "[[:space:]]" nil t -1)
-        (setq beg (1+ (point)))
-        (cons (buffer-substring beg end) (cons beg end))))))
+      (when (re-search-backward "\\([[:blank:]\n]\\|^\\)" nil t 1)
+        (setq beg (if (bolp)
+                      (point)
+                    (1+ (point))))
+        (cons (buffer-substring-no-properties beg end) (cons beg end))))))
 
 ;;;###autoload
 (defun yankpad-expand (&optional _first)
