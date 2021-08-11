@@ -469,14 +469,15 @@ Does not change `yankpad-category'."
       (message (concat "No snippet named " name))
       nil)))
 
-
 (defun yankpad-keyword-with-bounds-at-point ()
   "Get current keyword and its bounds."
   (save-excursion
     (let (beg (end (point)))
-      (when (re-search-forward "[[:space:]]" nil t -1)
-        (setq beg (1+ (point)))
-        (cons (buffer-substring beg end) (cons beg end))))))
+      (when (re-search-backward "\\([[:blank:]\n]\\|^\\)" nil t 1)
+        (setq beg (if (bolp)
+                      (point)
+                    (1+ (point))))
+        (cons (buffer-substring-no-properties beg end) (cons beg end))))))
 
 ;;;###autoload
 (defun yankpad-expand (&optional _first)
@@ -493,6 +494,7 @@ This function can be added to `hippie-expand-try-functions-list'."
          (symbol (car symbol-with-bounds))
          (bounds (cdr symbol-with-bounds))
          (snippet-prefix (concat symbol yankpad-expand-separator))
+         (possible-snippets '())
          (case-fold-search nil))
     (when (and symbol yankpad-category)
       (catch 'loop
@@ -511,13 +513,32 @@ This function can be added to `hippie-expand-try-functions-list'."
                    (delete-region (car bounds) (cdr bounds))
                    (yankpad--run-snippet snippet)
                    (throw 'loop snippet)))
+
              ;; Otherwise look for expand keyword
              (when (string-prefix-p snippet-prefix
                                     (car (split-string (car snippet) " ")))
                (delete-region (car bounds) (cdr bounds))
                (yankpad--run-snippet snippet)
-               (throw 'loop snippet))))
+               (throw 'loop snippet))
+
+             ;; Collect suffix matches
+             (let ((snippet-keyword (car (split-string (car snippet) yankpad-expand-separator))))
+               (when (string-suffix-p snippet-keyword symbol)
+                 (add-to-list 'possible-snippets (cons snippet-keyword snippet))))))
          (yankpad-active-snippets))
+
+        ;; Find the longest suffix match and apply it, if we have one
+        (when possible-snippets
+          (let* ((snippet-info (seq-reduce
+                                (lambda (acc it)
+                                  (if (> (length (car it)) (length acc))
+                                      it acc))
+                                possible-snippets ""))
+                 (snippet (cdr snippet-info))
+                 (snippet-keyword (car snippet-info)))
+            (delete-region (- (cdr bounds) (length snippet-keyword)) (cdr bounds))
+            (yankpad--run-snippet (cdr snippet-info))
+            (throw 'loop snippet)))
         nil))))
 
 ;;;###autoload
