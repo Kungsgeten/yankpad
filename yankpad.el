@@ -223,6 +223,12 @@ If 'abbrev, the items will overwrite `local-abbrev-table'."
   :type 'string
   :group 'yankpad)
 
+(defcustom yankpad-use-yasnippet t
+  "If non-nil and yasnippet is available, use it when pasting
+snippets."
+  :type 'boolean
+  :group 'yankpad)
+
 (defun yankpad-active-snippets ()
   "Get the snippets in the current category."
   (or yankpad--active-snippets (yankpad-set-active-snippets)))
@@ -366,11 +372,19 @@ a snippet name in the current category."
               (replace-regexp-in-string
                "^\\\\?[*]" (make-string prepend-asterisks ?*) content)))))))))
 
+(defun yankpad--use-yasnippet ()
+  "Determine if we can use yasnippet for pasting snippets.
+
+The yasnippet package must be available and the setting
+`yankpad-use-yasnippet' (default t) must be non-nil."
+  (and yankpad-use-yasnippet
+       (require 'yasnippet nil t)))
+
 (defun yankpad--insert-snippet-text (text indent wrap)
   "Insert TEXT into buffer.  INDENT is whether/how to indent the snippet.
 WRAP is the value for `yas-wrap-around-region', if `yasnippet' is available.
 Use yasnippet and `yas-indent-line' if available."
-  (if (and (require 'yasnippet nil t)
+  (if (and (yankpad--use-yasnippet)
            yas-minor-mode)
       (if (region-active-p)
           (yas-expand-snippet text (region-beginning) (region-end)
@@ -418,10 +432,10 @@ Return the result of the function output as a string."
                              'fixed)
                             ((member "indent_auto" tags)
                              'auto)
-                            ((and (require 'yasnippet nil t) yas-minor-mode)
+                            ((and (yankpad--use-yasnippet) yas-minor-mode)
                              yas-indent-line)
                             (t t)))
-              (wrap (cond ((or (not (and (require 'yasnippet nil t) yas-minor-mode))
+              (wrap (cond ((or (not (and (yankpad--use-yasnippet) yas-minor-mode))
                                (member "wrap_nil" tags))
                            nil)
                           ((member "wrap" tags)
