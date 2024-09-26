@@ -5,7 +5,7 @@
 
 ;; Author: Erik Sjöstrand
 ;; URL: http://github.com/Kungsgeten/yankpad
-;; Version: 2.30
+;; Version: 2.40
 ;; Keywords: abbrev convenience
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -40,10 +40,9 @@
 ;; you use the snippet.
 ;;
 ;; If you name a category to a major-mode name, that category will be switched
-;; to when you change major-mode.  If you have projectile installed, you can also
-;; name a categories to the same name as your projecile projects, and they will
-;; be switched to when using `projectile-find-file'.  These snippets will be
-;; appended to your active snippets if you change category.
+;; to when you change major-mode.  You can also name categories to the same name
+;; as your project.el or projectile projects.  These snippets will be appended to
+;; your active snippets if you change category.
 ;;
 ;; To insert a snippet from the yankpad, use `yankpad-insert' or
 ;; `yankpad-expand'.  `yankpad-expand' will look for a keyword at point, and
@@ -173,6 +172,7 @@
 
 (defcustom yankpad-auto-category-functions
   '(yankpad-major-mode-category
+    yankpad-project-category
     yankpad-projectile-category)
   "List of functions that return an implicit category name.
 
@@ -260,18 +260,24 @@ snippets."
   (when (require 'projectile nil t)
     (projectile-project-name)))
 
+(defsubst yankpad-project-category ()
+  "Return a category name based on the project.el project name."
+  (when (require 'project nil t)
+    (when-let ((proj (project-current)))
+      (project-name proj))))
+
 (defun yankpad-set-active-snippets ()
   "Set the `yankpad--active-snippets' to the snippets in the active category.
 If no active category, call `yankpad-set-category'.
-Also append major mode and/or projectile categories if `yankpad-category' is local."
+Also append major mode and/or project categories if `yankpad-category' is local."
   (unless yankpad-category
     (yankpad-set-category))
   (setq yankpad--active-snippets (yankpad--snippets yankpad-category))
   (when (local-variable-p 'yankpad-category)
     (thread-last (mapcar #'funcall yankpad-auto-category-functions)
-      (delq nil)
-      (seq-intersection (yankpad--categories))
-      (mapc #'yankpad-append-category)))
+                 (delq nil)
+                 (seq-intersection (yankpad--categories))
+                 (mapc #'yankpad-append-category)))
   (mapc #'yankpad-append-category (yankpad--global-categories))
   yankpad--active-snippets)
 
@@ -304,7 +310,12 @@ Prompts for CATEGORY if it isn't provided."
       (when (require 'projectile nil t)
         (when-let ((projectile-category (car (member (projectile-project-name)
                                                      categories))))
-          (yankpad--add-abbrevs-from-category projectile-category))))))
+          (yankpad--add-abbrevs-from-category projectile-category)))
+      (when (require 'project nil t)
+        (when-let* ((proj (project-current))
+                    (project-category (car (member (project-name proj)
+                                                   categories))))
+          (yankpad--add-abbrevs-from-category project-category))))))
 
 (defun yankpad-reload ()
   "Clear the snippet cache.
