@@ -139,6 +139,7 @@
 (require 'thingatpt)
 (require 'subr-x)
 (require 'seq)
+(require 'cl-lib)
 (when (version< (org-version) "8.3")
   (require 'ox))
 
@@ -297,19 +298,19 @@ Prompts for CATEGORY if it isn't provided."
 
 (defun yankpad-load-abbrevs ()
   "Load abbrevs related to `yankpad-category'."
-  (if-let ((major-abbrev-table (intern-soft (concat (symbol-name major-mode) "-abbrev-table"))))
+  (if-let* ((major-abbrev-table (intern-soft (concat (symbol-name major-mode) "-abbrev-table"))))
       (setq local-abbrev-table (copy-abbrev-table (eval major-abbrev-table)))
     (clear-abbrev-table local-abbrev-table))
   (yankpad--add-abbrevs-from-category yankpad-category)
   (mapc #'yankpad--add-abbrevs-from-category (yankpad--global-categories))
   (when (local-variable-p 'yankpad-category)
     (let ((categories (yankpad--categories)))
-      (when-let ((major-mode-category (car (member (symbol-name major-mode)
-                                                   categories))))
+      (when-let* ((major-mode-category (car (member (symbol-name major-mode)
+                                                    categories))))
         (yankpad--add-abbrevs-from-category major-mode-category))
       (when (require 'projectile nil t)
-        (when-let ((projectile-category (car (member (projectile-project-name)
-                                                     categories))))
+        (when-let* ((projectile-category (car (member (projectile-project-name)
+                                                      categories))))
           (yankpad--add-abbrevs-from-category projectile-category)))
       (when (require 'project nil t)
         (when-let* ((proj (project-current))
@@ -748,8 +749,8 @@ if that is defined in the `yankpad-file'."
 If successful, make `yankpad-category' buffer-local."
   (when (and (require 'projectile nil t)
              (file-exists-p yankpad-file))
-    (when-let ((category (car (member (projectile-project-name)
-                                      (yankpad--categories)))))
+    (when-let* ((category (car (member (projectile-project-name)
+                                       (yankpad--categories)))))
       (yankpad-set-local-category category))))
 
 (eval-after-load "projectile"
@@ -800,46 +801,83 @@ Each element is (KEY . DESCRIPTION), both strings."
                                      (org-element-property :contents-begin i)
                                      (org-element-property :contents-end i)))))))))))))
 
-;; `company-yankpad--name-or-key' and `company-yankpad' are Copyright (C) 2017
-;; Sidart Kurias (https://github.com/sid-kurias/) and are included by permission
-;; from the author. They're licensed under GNU GPL 3 (http://www.gnu.org/licenses/).
+(defun yankpad--get-completion-candidates (prefix snippets categories)
+  "Return a list of completion candidates based on PREFIX and separator."
+  (let ((candidates '())
+        (sep yankpad-expand-separator))
+    (dolist (cat categories)
+      (when (string-prefix-p prefix cat t)
+        (push cat candidates)))
+    (dolist (snippet snippets)
+      (let* ((name (car snippet))
+             (name-parts (split-string name sep t))
+             (keyword (car name-parts))
+             (annotation (mapconcat 'identity (cdr name-parts) sep)))
+        (when (and keyword (string-prefix-p prefix keyword t))
+          (push (propertize keyword 'annotation annotation) candidates))))
+    (sort (delete-dups candidates) #'string-lessp)))
 
-(defun company-yankpad--name-or-key (arg fn)
-  "Return candidates that match the string entered.
-ARG is what the user has entered and expects a match for.
-FN is the function that will extract either name or key."
-  (delq nil
-        (mapcar
-         (lambda (c) (let ((snip (split-string (car c)  yankpad-expand-separator)))
-                       (if (string-prefix-p arg (car snip) t)
-                           (progn
-                             (if (string-match yankpad-expand-separator (car c))
-                                 (set-text-properties 0 1 '(type keyword) (car snip))
-                               (set-text-properties 0 1 '(type name) (car snip)))
-                             (funcall fn snip)))))
-         (yankpad-active-snippets))))
+(defun yankpad--doc-buffer (candidate)
+  "Return a buffer with detailed documentation for the Yankpad CANDIDATE."
+  (let ((snippets (yankpad-active-snippets))
+        (categories (yankpad--categories)))
+    (let* ((full-snippet-name
+            (cl-find-if (lambda (snippet)
+                          (string-prefix-p candidate (car snippet)))
+                        snippets))
+           (snippet (assoc (car full-snippet-name) snippets)))
+      (when snippet
+        (with-current-buffer (get-buffer-create "*Yankpad Doc*")
+          (erase-buffer)
+          (insert (format "Snippet: %s\n\n" (car snippet)))
+          (let ((snippet-text (yankpad-snippet-text snippet)))
+            (when snippet-text
+              (insert "Content:\n")
+              (insert snippet-text)
+              (insert "\n\n")))
+          (when (> (length snippet) 1)
+            (insert "Additional details:\n")
+            (dolist (detail (cdr snippet))
+              (insert (format "- %S\n" detail))))
+          (goto-char (point-min))
+          (current-buffer))))))
 
 ;;;###autoload
-(defun company-yankpad (command &optional arg &rest ignored)
-  "Company backend for yankpad."
-  (interactive (list 'interactive))
-  (if (require 'company nil t)
-      (cl-case command
-        (interactive (company-begin-backend 'company-yankpad))
-        (prefix (company-grab-symbol))
-        (annotation (car (company-yankpad--name-or-key
-                          arg
-                          (lambda (snippet) (mapconcat 'identity (cdr snippet) " ")))))
-        (candidates (company-yankpad--name-or-key arg (lambda (snippet) (car snippet))))
-        (post-completion (let ((type (get-text-property 0 'type arg)))
-                           (if (equal type 'keyword)
-                               (yankpad-expand)
-                             (let ((word (word-at-point))
-                                   (bounds (bounds-of-thing-at-point 'word)))
-                               (delete-region (car bounds) (cdr bounds))
-                               (yankpad-insert-from-current-category arg)))))
-        (duplicates t))
-    (error "You need company in order to use company-yankpad")))
+(defun yankpad-capf ()
+  "Completion-at-point function for Yankpad with advanced support."
+  (interactive)
+  (when (and (featurep 'yankpad) yankpad-file)
+    (let* ((bounds (or (bounds-of-thing-at-point 'word) (cons (point) (point))))
+           (start (car bounds))
+           (end (cdr bounds))
+           (prefix (buffer-substring-no-properties start end))
+           (snippets (yankpad-active-snippets))
+           (categories (yankpad--categories))
+           (completions (yankpad--get-completion-candidates prefix snippets categories)))
+      (when completions
+        (list start end completions
+              :annotation-function (lambda (candidate)
+                                     (get-text-property 0 'annotation candidate))
+              :company-kind (lambda (_) 'snippet)
+              :company-doc-buffer #'yankpad--doc-buffer
+              :exit-function (lambda (candidate status)
+                               (when (string= status "finished")
+                                 (let* ((current-point (point))
+                                        (region-start (- current-point (length candidate))))
+                                   (delete-region region-start current-point)
+                                   (if (member candidate categories)
+                                       (progn
+                                         (insert candidate)
+                                         (yankpad-set-category)
+                                         (message "Category changed to %s" candidate))
+                                     (let* ((full-snippet-name
+                                             (cl-find-if (lambda (snippet)
+                                                          (string-prefix-p candidate (car snippet)))
+                                                        snippets))
+                                            (yankpad-snippet (assoc (car full-snippet-name) snippets)))
+                                       (when yankpad-snippet
+                                         (yankpad--run-snippet yankpad-snippet))))))
+              :exclusive 'yes))))))
 
 (provide 'yankpad)
 ;;; yankpad.el ends here
