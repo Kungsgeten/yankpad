@@ -854,7 +854,9 @@ Each element is (KEY . DESCRIPTION), both strings."
            (snippets (yankpad-active-snippets))
            (categories (yankpad--categories))
            (completions (yankpad--get-completion-candidates prefix snippets categories)))
-      (when completions
+      (when (and completions
+                 (or (> (length prefix) 0)
+                     (> (length completions) 0)))
         (list start end completions
               :annotation-function (lambda (candidate)
                                      (get-text-property 0 'annotation candidate))
