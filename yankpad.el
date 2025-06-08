@@ -540,8 +540,7 @@ This function can be added to `hippie-expand-try-functions-list'."
                    (throw 'loop snippet)))
 
              ;; Otherwise look for expand keyword
-             (when (string-prefix-p snippet-prefix
-                                    (car (split-string (car snippet) " ")))
+             (when (member symbol (butlast (split-string (car snippet) yankpad-expand-separator)))
                (delete-region (car bounds) (cdr bounds))
                (yankpad--run-snippet snippet)
                (throw 'loop snippet))
