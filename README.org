@@ -187,7 +187,7 @@ the yankpad:
 1. Install =yankpad= from Melpa, or download =yankpad.el= and add it to your load-path and require it.
 2. The default location for the yankpad file is =yankpad.org= in your =org-directory=. This can be changed by modifying the =yankpad-file= variable.
 3. Optionally bind =yankpad-map=, =yankpad-insert=, and/or =yankpad-expand= to a key.
-4. Optionally install =yasnippet= and/or =projectile= and/or =company-mode=, if you want the additional yankpad features that those package provide.
+4. Optionally install =yasnippet= and/or =projectile=, if you want the additional yankpad features that those package provide.
 5. That's it!
 
 If you want different heading levels for the categories (default 1), change the value of =yankpad-category-heading-level=. You can also change the tag which defines categories as global, by modifying =yankpad-global-tag=. The name of the major-mode fallback category can be changed by modifying =yankpad-default-category=.
@@ -205,8 +205,8 @@ Here's an example setup using the excellent [[https://github.com/jwiegley/use-pa
     :config
     (bind-key "<f7>" 'yankpad-map)
     (bind-key "<f12>" 'yankpad-expand)
-    ;; If you want to complete snippets using company-mode
-    (add-to-list 'company-backends #'company-yankpad)
+    ;; If you want to complete snippets using completion-preview, corfu-mode or company-mode
+    (add-to-list 'completion-at-point-functions #'yankpad-capf)
     ;; If you want to expand snippets with hippie-expand
     (add-to-list 'hippie-expand-try-functions-list #'yankpad-expand))
 #+END_SRC
@@ -281,6 +281,7 @@ If you set =yankpad-descriptive-list-treatment= to ='abbrev=, descriptive lists 
 
 * Changelog
 
+- 2.41 (March 2025) :: Remove =company-yankpad= in favor =yankpad-capf=, to support =completion-at-point=.
 - 2.40 (September 2024) :: Add support for =project.el= categories.
 - 2.30 (September 2019) :: Added property functionality via the tag =props=. Added regex expansion with the =YP_EXPAND_REGEX= property. Added =yankpad-before-snippet-hook=.
 - 2.20 (November 2018) :: Added the variable =yankpad-default-category=, which is =Default= by default. If you have a category with this name, it will be used for the current file if you don't have a major-mode specific category for that file. A snippet can now have several expand keywords, just separate them with colons.
