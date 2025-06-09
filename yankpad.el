@@ -327,6 +327,7 @@ If `yankpad-descriptive-list-treatment' is 'abbrev,
 `yankpad-category' will be scanned for abbrevs."
   (interactive)
   (setq yankpad--active-snippets nil)
+  (setq yankpad--cache nil)
   (when (and (eq yankpad-descriptive-list-treatment 'abbrev)
              yankpad-category)
     (yankpad-load-abbrevs)))
@@ -671,24 +672,30 @@ removed from the snippet text."
                           (replace-regexp-in-string org-property-drawer-re "" text))))
             (list (list heading tags src-blocks text properties))))))))
 
+(defvar yankpad--cache nil "An alist of category-name . snippets.")
+
 (defun yankpad--snippets (category-name)
   "Get an alist of the snippets in CATEGORY-NAME.
-Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
-  (let* ((propertystring (yankpad--category-include-property category-name))
-         (include (when propertystring
-                    (split-string propertystring "|")))
-         (snippets
-          (append
-           (when (eq yankpad-descriptive-list-treatment 'snippet)
-             (mapcar (lambda (d)
-                       (list (concat (car d) yankpad-expand-separator) nil nil (cdr d)))
-                     (yankpad-category-descriptions category-name)))
-           (org-with-point-at (yankpad-category-marker category-name)
-             (cl-reduce #'append
-                        (org-map-entries #'yankpad-snippets-at-point
-                                         (format "+LEVEL=%s" (1+ yankpad-category-heading-level))
-                                         'tree))))))
-    (append snippets (cl-reduce #'append (mapcar #'yankpad--snippets include)))))
+Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT).
+Tries to get a cached version from `yankpad--cache' if there is one."
+  (or (alist-get category-name yankpad--cache)
+      (let* ((propertystring (yankpad--category-include-property category-name))
+             (include (when propertystring
+                        (split-string propertystring "|")))
+             (snippets
+              (append
+               (when (eq yankpad-descriptive-list-treatment 'snippet)
+                 (mapcar (lambda (d)
+                           (list (concat (car d) yankpad-expand-separator) nil nil (cdr d)))
+                         (yankpad-category-descriptions category-name)))
+               (org-with-point-at (yankpad-category-marker category-name)
+                 (cl-reduce #'append
+                            (org-map-entries #'yankpad-snippets-at-point
+                                             (format "+LEVEL=%s" (1+ yankpad-category-heading-level))
+                                             'tree)))))
+             (all-snippets (append snippets (cl-reduce #'append (mapcar #'yankpad--snippets include)))))
+        (add-to-list 'yankpad--cache (cons category-name all-snippets))
+        all-snippets)))
 
 ;;;###autoload
 (defun yankpad-map ()
@@ -706,9 +713,9 @@ Each snippet is a list (NAME TAGS SRC-BLOCKS TEXT)."
                       (key (substring-no-properties last-tag)))
                   (push (cons key (format "[%s] %s " key heading)) map-help)
                   (define-key yankpad-keymap (kbd key)
-                    `(lambda ()
-                       (interactive)
-                       (yankpad--run-snippet ',snippet)))))))
+                              `(lambda ()
+                                 (interactive)
+                                 (yankpad--run-snippet ',snippet)))))))
           (yankpad-active-snippets))
     (let ((message-log-max nil))
       (message "yankpad: %s"
